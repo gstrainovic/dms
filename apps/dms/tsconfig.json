@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "vue",
+    "baseUrl": ".",
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@dms/shared": ["../../packages/shared/src"]
+    }
+  },
+  "include": ["src/**/*", "src/**/*.vue", "env.d.ts"],
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
+}
