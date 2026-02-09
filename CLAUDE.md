@@ -169,27 +169,43 @@ Alle Functions setzen `status: 'error'` + `error_message` im Fehlerfall.
 
 ### Lokale Entwicklung
 ```bash
-# Podman Socket starten
-systemctl --user start podman.socket
-export DOCKER_HOST="unix:///run/user/1000/podman/podman.sock"
-
-# Supabase starten
-supabase start
-
-# Dev Server
+# Alles automatisch starten (Podman + Supabase + Secrets + Vite):
 pnpm dev
 
-# Mistral API Key setzen (für Edge Functions)
-supabase secrets set MISTRAL_API_KEY=your-key
+# Oder manuell:
+systemctl --user start podman.socket
+export DOCKER_HOST="unix:///run/user/1000/podman/podman.sock"
+supabase start
+pnpm dev:frontend
 ```
 
 ### Befehle
-- `pnpm dev` — DMS Frontend starten (Port 3000)
-- `pnpm test` — Alle Tests (42)
+- `pnpm dev` — **Startet alles:** Podman-Socket, Secrets kopieren, Supabase, Vite (Port 3000)
+- `pnpm dev:frontend` — Nur Vite Dev Server (wenn Supabase schon laeuft)
+- `pnpm test` — **Startet alles + DB-Reset + alle 42 Tests**
+- `pnpm test:only` — Nur Tests ausfuehren (ohne Backend-Setup)
 - `pnpm build` — Production Build (vue-tsc + vite)
-- `supabase start` — Lokale Supabase (mit DOCKER_HOST)
-- `supabase db reset` — DB zurücksetzen + Migrations
+- `supabase db reset` — DB zuruecksetzen + Migrations
 - `supabase gen types typescript --local` — DB-Typen regenerieren
+
+### Scripts (scripts/)
+- **`dev.sh`** — Automatisiertes Dev-Setup:
+  1. Podman-Socket pruefen/starten
+  2. `.env` → `supabase/functions/.env` kopieren (Edge Function Secrets)
+  3. Supabase starten (mit Cleanup bei kaputten Containern)
+  4. Vite Dev Server starten
+- **`test.sh`** — Automatisiertes Test-Setup:
+  1. Podman-Socket pruefen/starten
+  2. Secrets kopieren
+  3. Supabase starten
+  4. `supabase db reset` (saubere DB fuer Tests)
+  5. `pnpm -r test` ausfuehren
+
+### Secrets
+- Mistral API Key in `.env` im Projektroot (Format: `MISTRAL_API_KEY=sk-...`)
+- Wird automatisch nach `supabase/functions/.env` kopiert (von dev.sh/test.sh)
+- `supabase/functions/.env` ist in `.gitignore` — wird nie committed
+- `.env.example` zeigt das erwartete Format
 
 ## Infra
 - Rootless Podman 5.7.1 auf Fedora 43
@@ -197,7 +213,8 @@ supabase secrets set MISTRAL_API_KEY=your-key
 - Container-Init ~60s (Migrations) — nicht sofort testen
 - Supabase CLI v2.75+ unterstützt rootless Podman
 
-## Bekannte Einschränkungen
+## Bekannte Einschraenkungen
 - `document_schemas` JSONB verursacht TS2589 → `schemas.ts` Store nutzt eigenen `Schema`-Typ statt auto-generated
-- Edge Functions brauchen `MISTRAL_API_KEY` als Supabase Secret
-- Hybrid-Search via Edge Function `search` (braucht Mistral Embed API für Query-Embedding)
+- Edge Functions lesen Secrets aus `supabase/functions/.env` (wird automatisch von dev.sh/test.sh aus `.env` kopiert)
+- Hybrid-Search via Edge Function `search` (braucht Mistral Embed API fuer Query-Embedding)
+- `supabase status` kann 0 zurueckgeben obwohl Container kaputt sind → dev.sh prueft DB-Container direkt via `docker ps`
