@@ -125,7 +125,7 @@ describe("Edge Functions Integration", () => {
 
       expect(res.status).toBe(201);
       const data = await res.json();
-      expect(data.id).toBeDefined();
+      expect(data.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
       expect(data.status).toBe("uploaded");
       cleanupDocIds.push(data.id);
     }, 15000);
@@ -140,8 +140,9 @@ describe("Edge Functions Integration", () => {
         body: '-----\r\nContent-Disposition: form-data; name="empty"\r\n\r\n\r\n-------\r\n',
       });
 
-      // Kann 400 oder 500 sein je nach FormData-Parsing
-      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect([400, 500]).toContain(res.status);
+      const data = await res.json();
+      expect(data.error).toBeDefined();
     }, 15000);
 
     it("erkennt SHA-256 Duplikate", async () => {
@@ -177,8 +178,8 @@ describe("Edge Functions Integration", () => {
 
       expect(doc).not.toBeNull();
       expect(doc!.mime_type).toBe("image/png");
-      expect(doc!.sha256).toBeDefined();
-      expect(doc!.storage_path).toContain("documents/");
+      expect(doc!.sha256).toMatch(/^[0-9a-f]{64}$/);
+      expect(doc!.storage_path).toMatch(/^documents\/[0-9a-f]{64}\/.+/);
     }, 15000);
 
     it("Datei existiert in Storage nach Upload", async () => {
@@ -193,11 +194,13 @@ describe("Edge Functions Integration", () => {
         .eq("id", id)
         .single();
 
-      const { data: fileData } = await supabase.storage
+      const { data: fileData, error: dlError } = await supabase.storage
         .from("documents")
         .download(doc!.storage_path);
 
+      expect(dlError).toBeNull();
       expect(fileData).not.toBeNull();
+      expect(fileData!.size).toBeGreaterThan(0);
     }, 15000);
   });
 
@@ -206,106 +209,66 @@ describe("Edge Functions Integration", () => {
   describe("Mistral-Pipeline (OCR → Extract → Embed)", () => {
     let pipelineDocId: string;
 
-    it("process-ocr verarbeitet Bild und setzt Status auf ocr_done", async () => {
+    it("komplette Pipeline: Upload → OCR → Extract → Embed → ready", async () => {
       // Upload via Edge Function
       const file = new Blob([makeUniquePng()], { type: "image/png" });
-      const uploadRes = await uploadFile(file, `ocr-test-${Date.now()}.png`);
+      const uploadRes = await uploadFile(file, `pipeline-test-${Date.now()}.png`);
       const { id } = await uploadRes.json();
       pipelineDocId = id;
       cleanupDocIds.push(id);
 
-      // Warte auf OCR-Verarbeitung (wird automatisch getriggert)
+      // Warte auf vollständige Pipeline
       const status = await waitForStatus(
         supabase,
         id,
-        ["ocr_done", "extracted", "ready"],
-        30000,
+        ["ready"],
+        60000,
       );
 
+      // Bei error: Fehlermeldung als Assertion-Message ausgeben
       if (status === "error") {
-        const { data: doc } = await supabase
+        const { data: errDoc } = await supabase
           .from("documents")
           .select("error_message")
           .eq("id", id)
           .single();
-        throw new Error(`Pipeline fehlgeschlagen: ${doc?.error_message}`);
-      }
-
-      expect(["ocr_done", "extracted", "ready"]).toContain(status);
-
-      const { data: doc } = await supabase
-        .from("documents")
-        .select("ocr_text, status")
-        .eq("id", id)
-        .single();
-      expect(doc!.ocr_text).not.toBeNull();
-    }, 35000);
-
-    it("extract-data erkennt Dokumenttyp und erstellt Tags", async () => {
-      expect(pipelineDocId).toBeDefined();
-
-      const status = await waitForStatus(
-        supabase,
-        pipelineDocId,
-        ["extracted", "ready"],
-        30000,
-      );
-
-      if (status === "error") {
-        const { data: doc } = await supabase
-          .from("documents")
-          .select("error_message")
-          .eq("id", pipelineDocId)
-          .single();
-        throw new Error(`Pipeline fehlgeschlagen: ${doc?.error_message}`);
-      }
-
-      const { data: doc } = await supabase
-        .from("documents")
-        .select("document_type, title, status")
-        .eq("id", pipelineDocId)
-        .single();
-
-      expect(doc!.document_type).not.toBeNull();
-      expect(doc!.title).not.toBeNull();
-
-      const { data: tags } = await supabase
-        .from("document_tags")
-        .select("tag_id")
-        .eq("document_id", pipelineDocId);
-
-      expect(tags!.length).toBeGreaterThanOrEqual(1);
-    }, 35000);
-
-    it("generate-embed erstellt Embeddings und Status wird ready", async () => {
-      expect(pipelineDocId).toBeDefined();
-
-      const status = await waitForStatus(
-        supabase,
-        pipelineDocId,
-        ["ready"],
-        30000,
-      );
-
-      if (status === "error") {
-        const { data: doc } = await supabase
-          .from("documents")
-          .select("error_message")
-          .eq("id", pipelineDocId)
-          .single();
-        throw new Error(`Pipeline fehlgeschlagen: ${doc?.error_message}`);
+        expect.fail(`Pipeline stoppte mit error: ${errDoc?.error_message}`);
       }
 
       expect(status).toBe("ready");
 
+      // OCR-Text muss vorhanden sein
+      const { data: doc } = await supabase
+        .from("documents")
+        .select("ocr_text, title, document_type, status")
+        .eq("id", id)
+        .single();
+
+      expect(doc!.status).toBe("ready");
+      expect(doc!.ocr_text).toBeTruthy();
+      expect(doc!.title).toBeTruthy();
+      expect(doc!.document_type).toBeTruthy();
+
+      // Tags müssen von AI erstellt worden sein
+      const { data: tags } = await supabase
+        .from("document_tags")
+        .select("source, tags(name)")
+        .eq("document_id", id);
+
+      expect(tags!.length).toBeGreaterThan(0);
+      expect(tags![0].source).toBe("ai");
+
+      // Embeddings müssen existieren
       const { data: embeddings } = await supabase
         .from("document_embeddings")
         .select("chunk_index, chunk_text")
-        .eq("document_id", pipelineDocId);
+        .eq("document_id", id)
+        .order("chunk_index");
 
-      expect(embeddings!.length).toBeGreaterThanOrEqual(1);
-      expect(embeddings![0].chunk_text).toBeDefined();
-    }, 35000);
+      expect(embeddings!.length).toBeGreaterThan(0);
+      expect(embeddings![0].chunk_index).toBe(0);
+      expect(embeddings![0].chunk_text).toMatch(/\S/);
+    }, 65000);
   });
 
   // --- Tier 2: PDF lokale Text-Extraktion ---
@@ -324,13 +287,8 @@ describe("Edge Functions Integration", () => {
       const { id } = await res.json();
       cleanupDocIds.push(id);
 
-      // Pipeline durchlaufen lassen
-      const status = await waitForStatus(
-        supabase,
-        id,
-        ["ocr_done", "extracted", "ready"],
-        30000,
-      );
+      // Pipeline muss komplett durchlaufen
+      const status = await waitForStatus(supabase, id, ["ready"], 60000);
 
       if (status === "error") {
         const { data: errDoc } = await supabase
@@ -338,21 +296,23 @@ describe("Edge Functions Integration", () => {
           .select("error_message")
           .eq("id", id)
           .single();
-        throw new Error(`Pipeline fehlgeschlagen: ${errDoc?.error_message}`);
+        expect.fail(`Pipeline stoppte mit error: ${errDoc?.error_message}`);
       }
 
-      expect(["ocr_done", "extracted", "ready"]).toContain(status);
+      expect(status).toBe("ready");
 
       const { data: doc } = await supabase
         .from("documents")
-        .select("ocr_text, page_count, mime_type")
+        .select("ocr_text, page_count, mime_type, title, document_type")
         .eq("id", id)
         .single();
 
       expect(doc!.mime_type).toBe("application/pdf");
-      expect(doc!.ocr_text).not.toBeNull();
+      expect(doc!.ocr_text).toBeTruthy();
       expect(doc!.ocr_text!.length).toBeGreaterThan(50);
-      expect(doc!.page_count).toBeGreaterThanOrEqual(1);
+      expect(doc!.page_count).toBeGreaterThan(0);
+      expect(doc!.title).toBeTruthy();
+      expect(doc!.document_type).toBeTruthy();
     }, 35000);
   });
 
@@ -384,8 +344,7 @@ describe("Edge Functions Integration", () => {
       expect(res.status).toBe(200);
 
       const data = await res.json();
-      expect(data.results).toBeDefined();
-      // Möglicherweise 0 Ergebnisse weil hybrid_search Embeddings braucht
+      expect(data.results).toBeInstanceOf(Array);
     }, 30000);
 
     it("gibt 400 für leeren Query zurück", async () => {
@@ -405,8 +364,9 @@ describe("Edge Functions Integration", () => {
 
       expect(res.status).toBe(200);
       const data = await res.json();
-      expect(data.reply).toBeDefined();
-      expect(data.sources).toBeDefined();
+      expect(typeof data.reply).toBe("string");
+      expect(data.reply.length).toBeGreaterThan(0);
+      expect(data.sources).toBeInstanceOf(Array);
     }, 30000);
 
     it("gibt 400 für leere Nachricht zurück", async () => {
@@ -428,7 +388,8 @@ describe("Edge Functions Integration", () => {
 
       expect(res.status).toBe(500);
       const data = await res.json();
-      expect(data.error).toBeDefined();
+      expect(typeof data.error).toBe("string");
+      expect(data.error.length).toBeGreaterThan(0);
     }, 15000);
 
     it("extract-data gibt Fehler für fehlende documentId", async () => {

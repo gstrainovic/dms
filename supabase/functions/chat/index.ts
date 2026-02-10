@@ -106,13 +106,15 @@ ${context || 'Keine relevanten Dokumente gefunden.'}`,
     const chatData = await chatResponse.json()
     const reply = chatData.choices[0].message.content
 
-    // 5. Quellen zurückgeben
-    const sources = (searchResults ?? []).map((r: any) => ({
-      id: r.id,
-      title: r.title,
-      documentType: r.document_type,
-      score: r.score,
-    }))
+    // 5. Quellen zurückgeben (dedupliziert nach Dokument-ID, bester Score)
+    const sourceMap = new Map<string, { id: string; title: string; documentType: string; score: number }>()
+    for (const r of searchResults ?? []) {
+      const existing = sourceMap.get(r.id)
+      if (!existing || r.score > existing.score) {
+        sourceMap.set(r.id, { id: r.id, title: r.title, documentType: r.document_type, score: r.score })
+      }
+    }
+    const sources = Array.from(sourceMap.values())
 
     return new Response(
       JSON.stringify({ reply, sources }),

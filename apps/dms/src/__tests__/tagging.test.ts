@@ -285,12 +285,9 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
       .order('document_type')
 
     expect(error).toBeNull()
-    expect(data!.length).toBeGreaterThanOrEqual(3)
-
-    const types = data!.map((s) => s.document_type)
-    expect(types).toContain('invoice')
-    expect(types).toContain('contract')
-    expect(types).toContain('medical_letter')
+    expect(data!.length).toBe(3)
+    const types = data!.map((s) => s.document_type).sort()
+    expect(types).toEqual(['contract', 'invoice', 'medical_letter'])
   })
 
   it('ordnet Schema einem Dokument zu', async () => {

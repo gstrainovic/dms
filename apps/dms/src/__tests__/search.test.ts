@@ -115,7 +115,7 @@ describe('Suche', () => {
     })
 
     expect(error).toBeNull()
-    expect(data!.length).toBeGreaterThanOrEqual(1)
+    expect(data!.length).toBeGreaterThan(0)
     expect(data![0].title).toContain('Rechnung')
   })
 

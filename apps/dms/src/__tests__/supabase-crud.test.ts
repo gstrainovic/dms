@@ -144,11 +144,9 @@ describe('Supabase CRUD', () => {
       .select('*')
 
     expect(error).toBeNull()
-    expect(data!.length).toBeGreaterThanOrEqual(3)
-    const types = data!.map((s) => s.document_type)
-    expect(types).toContain('invoice')
-    expect(types).toContain('contract')
-    expect(types).toContain('medical_letter')
+    expect(data!.length).toBe(3)
+    const types = data!.map((s) => s.document_type).sort()
+    expect(types).toEqual(['contract', 'invoice', 'medical_letter'])
   })
 
   it('löscht ein Dokument (kaskadiert)', async () => {

@@ -164,7 +164,7 @@ describe('Upload Pipeline', () => {
 
     expect(searchError).toBeNull()
     expect(results).not.toBeNull()
-    expect(results!.length).toBeGreaterThanOrEqual(1)
+    expect(results!.length).toBeGreaterThan(0)
     expect(results!.some((r) => r.id === doc!.id)).toBe(true)
   })
 
