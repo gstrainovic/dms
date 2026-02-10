@@ -39,30 +39,44 @@ else
   fi
 fi
 
-# 2. Secrets fuer Edge Functions bereitstellen (VOR supabase start)
-# supabase start laedt automatisch supabase/functions/.env
-ENV_FILE="$PROJECT_ROOT/.env"
-FUNCTIONS_ENV="$PROJECT_ROOT/supabase/functions/.env"
-if [[ -f "$ENV_FILE" ]]; then
-  if [[ ! -f "$FUNCTIONS_ENV" ]] || ! diff -q "$ENV_FILE" "$FUNCTIONS_ENV" >/dev/null 2>&1; then
-    cp "$ENV_FILE" "$FUNCTIONS_ENV"
-    log "Secrets nach supabase/functions/.env kopiert"
-  else
-    log "Secrets bereits aktuell"
-  fi
-else
-  warn "Keine .env-Datei gefunden — Secrets nicht gesetzt"
+# 2. Prüfe ob Supabase bereits läuft
+# supabase status gibt 0 zurueck auch wenn Container kaputt sind
+# → pruefe ob der DB-Container tatsaechlich laeuft (Docker CE oder Podman)
+SUPABASE_DB_RUNNING=$(DOCKER_HOST= docker ps --filter "name=supabase_db_" --filter "status=running" -q 2>/dev/null || true)
+if [[ -z "$SUPABASE_DB_RUNNING" ]]; then
+  SUPABASE_DB_RUNNING=$(docker ps --filter "name=supabase_db_" --filter "status=running" -q 2>/dev/null || true)
 fi
 
-# 3. Supabase
-# supabase status gibt 0 zurueck auch wenn Container kaputt sind
-# → pruefe ob der DB-Container tatsaechlich laeuft
-SUPABASE_DB_RUNNING=$(docker ps --filter "name=supabase_db_" --filter "status=running" -q 2>/dev/null || true)
-
 if [[ -n "$SUPABASE_DB_RUNNING" ]]; then
-  log "Supabase laeuft bereits"
+  log "Supabase laeuft bereits — ueberspringe Setup"
 else
-  # Aufraeumen falls Container in schlechtem Zustand oder Lock existiert
+  # 2a. SELinux-Kontext fuer Edge Functions setzen (Fedora/RHEL mit rootless Podman)
+  if command -v getenforce &>/dev/null && [[ "$(getenforce)" != "Disabled" ]]; then
+    FUNCTIONS_DIR="$PROJECT_ROOT/supabase/functions"
+    if [[ -d "$FUNCTIONS_DIR" ]]; then
+      CURRENT_CONTEXT=$(ls -dZ "$FUNCTIONS_DIR" 2>/dev/null | awk '{print $1}' || true)
+      if [[ "$CURRENT_CONTEXT" != *"container_file_t"* ]]; then
+        log "Setze SELinux-Kontext fuer Edge Functions..."
+        chcon -R -t container_file_t "$FUNCTIONS_DIR"
+      fi
+    fi
+  fi
+
+  # 2b. Secrets fuer Edge Functions bereitstellen (VOR supabase start)
+  ENV_FILE="$PROJECT_ROOT/.env"
+  FUNCTIONS_ENV="$PROJECT_ROOT/supabase/functions/.env"
+  if [[ -f "$ENV_FILE" ]]; then
+    if [[ ! -f "$FUNCTIONS_ENV" ]] || ! diff -q "$ENV_FILE" "$FUNCTIONS_ENV" >/dev/null 2>&1; then
+      cp "$ENV_FILE" "$FUNCTIONS_ENV"
+      log "Secrets nach supabase/functions/.env kopiert"
+    else
+      log "Secrets bereits aktuell"
+    fi
+  else
+    warn "Keine .env-Datei gefunden — Secrets nicht gesetzt"
+  fi
+
+  # 2c. Supabase starten
   STALE_CONTAINERS=$(docker ps -a --filter "name=supabase_" -q 2>/dev/null || true)
   if [[ -n "$STALE_CONTAINERS" ]]; then
     warn "Alte Supabase-Container gefunden — raeume auf..."
@@ -74,7 +88,7 @@ else
   log "Supabase gestartet"
 fi
 
-# 4. Vite Dev Server
+# 5. Vite Dev Server
 log "Starte Vite Dev Server auf Port 3000..."
 cd "$PROJECT_ROOT"
 pnpm --filter @dms/app dev &

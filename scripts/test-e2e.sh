@@ -9,9 +9,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-log() { echo -e "${GREEN}[test]${NC} $1"; }
-warn() { echo -e "${YELLOW}[test]${NC} $1"; }
-err() { echo -e "${RED}[test]${NC} $1" >&2; }
+log() { echo -e "${GREEN}[e2e]${NC} $1"; }
+warn() { echo -e "${YELLOW}[e2e]${NC} $1"; }
+err() { echo -e "${RED}[e2e]${NC} $1" >&2; }
 
 # 1. Podman Socket
 PODMAN_SOCKET="/run/user/$(id -u)/podman/podman.sock"
@@ -53,7 +53,7 @@ else
     fi
   fi
 
-  # 2b. Secrets fuer Edge Functions bereitstellen (VOR supabase start)
+  # 2b. Secrets fuer Edge Functions bereitstellen
   ENV_FILE="$PROJECT_ROOT/.env"
   FUNCTIONS_ENV="$PROJECT_ROOT/supabase/functions/.env"
   if [[ -f "$ENV_FILE" ]]; then
@@ -82,7 +82,7 @@ log "Setze Datenbank zurueck..."
 supabase db reset 2>&1 | tail -5
 log "Datenbank bereit"
 
-# 6. Tests ausfuehren
-log "Starte Tests..."
+# 6. Playwright E2E Tests ausfuehren
+log "Starte E2E Tests..."
 cd "$PROJECT_ROOT"
-pnpm -r test "$@"
+pnpm exec playwright test "$@"

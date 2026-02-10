@@ -8,10 +8,27 @@ dist/
 .vite/
 coverage/
 
+# TS Build Artifacts
+*.js.map
+*.d.ts.map
+*.tsbuildinfo
+# JS output neben TS-Quellen (vue-tsc build artifacts)
+apps/dms/src/**/*.js
+apps/dms/src/**/*.d.ts
+apps/dms/vite.config.js
+apps/dms/vite.config.d.ts
+apps/dms/vite.config.d.ts.map
+apps/dms/vite.config.js.map
+
 # Supabase
 .supabase/
 supabase/.temp/
 supabase/functions/.env
+
+# Playwright
+test-results/
+playwright-report/
+e2e/fixtures/*.generated.*
 
 # IDE
 .idea/

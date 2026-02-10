@@ -159,13 +159,25 @@ Alle Functions setzen `status: 'error'` + `error_message` im Fehlerfall.
 6. **Chat** — RAG-Chat mit Mistral Small, Quellen-Links, Nachrichtenverlauf
 7. **Einstellungen** — Schema-Editor (CRUD, JSON), Tag-Verwaltung
 
-### Tests (42 Stück, alle grün)
+### Tests (112 Stück, alle grün)
+
+**Unit/Integration (57 Tests, Vitest):**
 - `shared/retry.test.ts` — 5 Tests (withRetry, Rate-Limit, maxRetries)
 - `shared/image-utils.test.ts` — 3 Tests (SHA-256 Hash)
 - `app/supabase-crud.test.ts` — 10 Tests (CRUD, Joins, Constraints)
 - `app/upload.test.ts` — 7 Tests (Storage, SHA-256, Dedup, Pipeline, FTS, Error, Realtime)
 - `app/tagging.test.ts` — 11 Tests (Tag CRUD, AI/Manual Source, Fields, Schemas, Filter)
 - `app/search.test.ts` — 6 Tests (Volltext deutsch, hybrid_search RPC, Filter)
+- `app/edge-functions.test.ts` — 15 Tests (Upload, OCR, Extract, Embed, Search, Chat)
+
+**E2E (55 Tests, Playwright Chromium):**
+- `e2e/dashboard.spec.ts` — 8 Tests (Stats, Navigation, Tags, Typen)
+- `e2e/documents.spec.ts` — 8 Tests (DataTable, Suche, Filter, Sortierung)
+- `e2e/document-detail.spec.ts` — 10 Tests (Titel, Tags, Felder, OCR, Loeschen)
+- `e2e/upload.spec.ts` — 8 Tests (Drop-Zone, Upload, Fortschritt, PDF)
+- `e2e/search.spec.ts` — 7 Tests (Volltext, Ergebnisse, Navigation, Modus)
+- `e2e/chat.spec.ts` — 6 Tests (Willkommen, Senden, Antwort, Neuer Chat)
+- `e2e/settings.spec.ts` — 8 Tests (Theme, Schema CRUD, Tags)
 
 ### Lokale Entwicklung
 ```bash
@@ -182,8 +194,10 @@ pnpm dev:frontend
 ### Befehle
 - `pnpm dev` — **Startet alles:** Podman-Socket, Secrets kopieren, Supabase, Vite (Port 3000)
 - `pnpm dev:frontend` — Nur Vite Dev Server (wenn Supabase schon laeuft)
-- `pnpm test` — **Startet alles + DB-Reset + alle 42 Tests**
-- `pnpm test:only` — Nur Tests ausfuehren (ohne Backend-Setup)
+- `pnpm test` — **Startet alles + DB-Reset + alle 57 Unit/Integration Tests**
+- `pnpm test:only` — Nur Unit/Integration Tests ausfuehren (ohne Backend-Setup)
+- `pnpm test:e2e` — **Startet alles + DB-Reset + alle 55 Playwright E2E Tests**
+- `pnpm test:all` — **Alle Tests:** Unit/Integration + E2E (112 Tests gesamt)
 - `pnpm build` — Production Build (vue-tsc + vite)
 - `supabase db reset` — DB zuruecksetzen + Migrations
 - `supabase gen types typescript --local` — DB-Typen regenerieren
@@ -191,15 +205,18 @@ pnpm dev:frontend
 ### Scripts (scripts/)
 - **`dev.sh`** — Automatisiertes Dev-Setup:
   1. Podman-Socket pruefen/starten
-  2. `.env` → `supabase/functions/.env` kopieren (Edge Function Secrets)
-  3. Supabase starten (mit Cleanup bei kaputten Containern)
-  4. Vite Dev Server starten
+  2. SELinux-Kontext setzen (container_file_t fuer Edge Functions)
+  3. `.env` → `supabase/functions/.env` kopieren (Edge Function Secrets)
+  4. Supabase starten (mit Cleanup bei kaputten Containern)
+  5. Vite Dev Server starten
 - **`test.sh`** — Automatisiertes Test-Setup:
   1. Podman-Socket pruefen/starten
-  2. Secrets kopieren
-  3. Supabase starten
-  4. `supabase db reset` (saubere DB fuer Tests)
-  5. `pnpm -r test` ausfuehren
+  2. SELinux-Kontext setzen (container_file_t)
+  3. Secrets kopieren
+  4. Supabase starten
+  5. `supabase db reset` (saubere DB fuer Tests)
+  6. `pnpm -r test` ausfuehren
+- **`test-e2e.sh`** — E2E Test-Setup (wie test.sh, aber mit Playwright statt Vitest)
 
 ### Secrets
 - Mistral API Key in `.env` im Projektroot (Format: `MISTRAL_API_KEY=sk-...`)
@@ -218,3 +235,5 @@ pnpm dev:frontend
 - Edge Functions lesen Secrets aus `supabase/functions/.env` (wird automatisch von dev.sh/test.sh aus `.env` kopiert)
 - Hybrid-Search via Edge Function `search` (braucht Mistral Embed API fuer Query-Embedding)
 - `supabase status` kann 0 zurueckgeben obwohl Container kaputt sind → dev.sh prueft DB-Container direkt via `docker ps`
+- Vite bevorzugt `.js` ueber `.ts` beim Resolven → NIEMALS `tsc` im `src/` laufen lassen (erzeugt .js Artefakte die Vite statt der .ts Quellen verwendet). `.gitignore` schliesst `apps/dms/src/**/*.js` aus
+- SELinux auf Fedora: Edge Functions brauchen `container_file_t` Kontext → wird automatisch von dev.sh/test.sh gesetzt

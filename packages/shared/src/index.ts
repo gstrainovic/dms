@@ -1,3 +1,4 @@
+export { uint8ToBase64, toDataUrl } from './encoding.js'
 export { getModel, type ModelConfig } from './ai-provider.js'
 export { callMistralOcr, callMistralOcrPdf, type OcrResult } from './ocr-pipeline.js'
 export { hashImage, resizeImage } from './image-utils.js'

@@ -31,7 +31,13 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
-  const mistralKey = Deno.env.get('MISTRAL_API_KEY')!
+  const mistralKey = Deno.env.get('MISTRAL_API_KEY')
+  if (!mistralKey) {
+    return new Response(
+      JSON.stringify({ error: 'MISTRAL_API_KEY ist nicht konfiguriert' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
 
   let documentId: string | null = null
 
@@ -67,8 +73,9 @@ Deno.serve(async (req: Request) => {
     const uint8 = new Uint8Array(buffer)
 
     // Base64-Encoding in Chunks (vermeidet Stack Overflow bei großen Dateien)
+    // chunkSize MUSS durch 3 teilbar sein, sonst fügt btoa Padding (=) mitten im String ein
     let base64 = ''
-    const chunkSize = 32768
+    const chunkSize = 32766
     for (let i = 0; i < uint8.length; i += chunkSize) {
       base64 += btoa(String.fromCharCode(...uint8.subarray(i, i + chunkSize)))
     }

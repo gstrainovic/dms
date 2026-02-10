@@ -14,7 +14,13 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
-  const mistralKey = Deno.env.get('MISTRAL_API_KEY')!
+  const mistralKey = Deno.env.get('MISTRAL_API_KEY')
+  if (!mistralKey) {
+    return new Response(
+      JSON.stringify({ error: 'MISTRAL_API_KEY ist nicht konfiguriert' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
 
   try {
     const { message, history = [], filterDocumentType = null } = await req.json()

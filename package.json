@@ -1,6 +1,7 @@
 {
   "name": "dms-monorepo",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.29.1",
   "scripts": {
     "dev": "bash scripts/dev.sh",
@@ -8,10 +9,18 @@
     "build": "pnpm --filter @dms/app build",
     "test": "bash scripts/test.sh",
     "test:only": "pnpm -r test",
+    "test:e2e": "bash scripts/test-e2e.sh",
+    "test:all": "bash scripts/test.sh && bash scripts/test-e2e.sh",
     "lint": "pnpm -r lint",
     "supabase": "supabase"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@supabase/supabase-js": "^2.95.3"
   }
 }
