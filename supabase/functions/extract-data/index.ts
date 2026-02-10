@@ -1,8 +1,33 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+/** Nächste Pipeline-Stufe triggern mit Fehlerbehandlung */
+function triggerNext(url: string, documentId: string, supabase: SupabaseClient) {
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+    },
+    body: JSON.stringify({ documentId }),
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const body = await res.text().catch(() => 'unknown')
+        throw new Error(`${url} antwortete mit ${res.status}: ${body}`)
+      }
+    })
+    .catch(async (err) => {
+      console.error(`Pipeline-Trigger fehlgeschlagen: ${err.message}`)
+      await supabase
+        .from('documents')
+        .update({ status: 'error', error_message: `Pipeline-Trigger fehlgeschlagen: ${err.message}` })
+        .eq('id', documentId)
+    })
 }
 
 Deno.serve(async (req: Request) => {
@@ -200,16 +225,9 @@ Maximal 10 Felder. Nutze deutsche Feldnamen in snake_case.`,
       })
     }
 
-    // Trigger embedding generation
+    // Trigger embedding generation mit Fehlerbehandlung
     const embedUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-embed`
-    fetch(embedUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-      },
-      body: JSON.stringify({ documentId }),
-    }).catch(console.error)
+    triggerNext(embedUrl, documentId, supabase)
 
     return new Response(
       JSON.stringify({
