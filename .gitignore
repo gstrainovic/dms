@@ -30,6 +30,9 @@ test-results/
 playwright-report/
 e2e/fixtures/*.generated.*
 
+# Business Plan (privat)
+business-plan/
+
 # IDE
 .idea/
 .vscode/

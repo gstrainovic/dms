@@ -10,15 +10,28 @@ Deno.serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  )
   const mistralKey = Deno.env.get('MISTRAL_API_KEY')
   if (!mistralKey) {
     return new Response(
       JSON.stringify({ error: 'MISTRAL_API_KEY ist nicht konfiguriert' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+
+  // User-scoped client for RPC (hybrid_search uses auth.uid())
+  const authHeader = req.headers.get('Authorization') ?? ''
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } },
+  )
+
+  // Verify user is authenticated
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return new Response(
+      JSON.stringify({ error: 'Nicht authentifiziert' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   }
 
@@ -59,7 +72,7 @@ Deno.serve(async (req: Request) => {
     const embedData = await embedResponse.json()
     const queryEmbedding = embedData.data[0].embedding
 
-    // Hybrid Search via DB-Funktion
+    // Hybrid Search via DB-Funktion (user-scoped through auth.uid())
     const { data, error } = await supabase.rpc('hybrid_search', {
       query_text: query,
       query_embedding: JSON.stringify(queryEmbedding),

@@ -38,7 +38,7 @@ function searchTags(event: { query: string }) {
   )
   // Option zum Erstellen anbieten, wenn kein exakter Treffer
   if (q && !tagsStore.tags.some((t) => t.name.toLowerCase() === q)) {
-    suggestions.value.push({ id: '__new__', name: `"${event.query}" erstellen`, color: null, created_at: '' })
+    suggestions.value.push({ id: '__new__', name: `"${event.query}" erstellen`, color: null, created_at: '', user_id: null })
   }
 }
 

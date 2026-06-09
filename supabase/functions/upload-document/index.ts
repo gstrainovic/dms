@@ -36,6 +36,21 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // User-ID aus JWT extrahieren
+    const authHeader = req.headers.get('Authorization') ?? ''
+    const userSupabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } },
+    )
+    const { data: { user }, error: authError } = await userSupabase.auth.getUser()
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Nicht authentifiziert' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -61,6 +76,7 @@ Deno.serve(async (req: Request) => {
       .from('documents')
       .select('id')
       .eq('sha256', sha256)
+      .eq('user_id', user.id)
       .maybeSingle()
 
     if (existing) {
@@ -81,7 +97,7 @@ Deno.serve(async (req: Request) => {
 
     if (uploadError) throw uploadError
 
-    // DB-Eintrag
+    // DB-Eintrag mit user_id
     const { data: doc, error: dbError } = await supabase
       .from('documents')
       .insert({
@@ -91,6 +107,7 @@ Deno.serve(async (req: Request) => {
         storage_path: storagePath,
         sha256,
         status: 'uploaded',
+        user_id: user.id,
       })
       .select()
       .single()

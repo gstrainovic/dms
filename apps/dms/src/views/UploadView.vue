@@ -119,15 +119,15 @@ function fileIcon(type: string) {
       <template #content>
         <div
           class="border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer"
-          :class="dragOver ? 'border-primary bg-primary/5' : 'border-gray-300'"
+          :class="dragOver ? 'border-primary bg-primary/5' : 'border-surface-300'"
           @dragover.prevent="dragOver = true"
           @dragleave="dragOver = false"
           @drop.prevent="onDrop"
           @click="fileInput?.click()"
         >
-          <i class="pi pi-cloud-upload text-5xl mb-3" :class="dragOver ? 'text-primary' : 'text-gray-400'" />
+          <i class="pi pi-cloud-upload text-5xl mb-3" :class="dragOver ? 'text-primary' : 'text-surface-400'" />
           <p class="text-lg mb-1">Dateien hierher ziehen oder klicken</p>
-          <p class="text-sm text-gray-500 mb-4">PDF, JPG, PNG, WebP — Max. 50 MB pro Datei</p>
+          <p class="text-sm text-surface-400 mb-4">PDF, JPG, PNG, WebP — Max. 50 MB pro Datei</p>
           <div class="flex gap-2 justify-center">
             <Button
               label="Dateien wählen"
@@ -167,13 +167,13 @@ function fileIcon(type: string) {
       <div
         v-for="item in items"
         :key="item.id"
-        class="flex items-center gap-3 p-3 bg-white rounded-lg border"
+        class="flex items-center gap-3 p-3 bg-surface-0 rounded-lg border border-surface-200"
       >
-        <i :class="fileIcon(item.file.type)" class="text-xl text-gray-500" />
+        <i :class="fileIcon(item.file.type)" class="text-xl text-surface-400" />
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <span class="font-medium truncate">{{ item.file.name }}</span>
-            <span class="text-sm text-gray-400">{{ formatSize(item.file.size) }}</span>
+            <span class="text-sm text-surface-400">{{ formatSize(item.file.size) }}</span>
           </div>
           <ProgressBar
             v-if="['uploading', 'processing'].includes(item.status)"

@@ -62,6 +62,8 @@ Deno.serve(async (req: Request) => {
 
     if (!doc || !doc.ocr_text) throw new Error('Kein OCR-Text vorhanden')
 
+    const userId = doc.user_id
+
     // Alle Schemas laden
     const { data: schemas } = await supabase
       .from('document_schemas')
@@ -195,10 +197,11 @@ Maximal 10 Felder. Nutze deutsche Feldnamen in snake_case.`,
         .from('tags')
         .select('id')
         .eq('name', tagName)
+        .eq('user_id', userId)
         .maybeSingle()
 
       const tagId = existingTag?.id ?? (
-        await supabase.from('tags').insert({ name: tagName }).select('id').single()
+        await supabase.from('tags').insert({ name: tagName, user_id: userId }).select('id').single()
       ).data?.id
 
       if (tagId) {

@@ -2,15 +2,34 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'http://127.0.0.1:54321'
-const SUPABASE_ANON_KEY =
+const SERVICE_ROLE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
+const ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
 
 describe('Suche', () => {
   let supabase: SupabaseClient
+  let userClient: SupabaseClient
+  let testUserId: string
   const testDocIds: string[] = []
 
   beforeAll(async () => {
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+
+    // Test-User erstellen
+    const email = 'vitest-search@test.local'
+    await supabase.auth.admin.createUser({ email, email_confirm: true })
+    const { data: linkData } = await supabase.auth.admin.generateLink({ type: 'magiclink', email })
+    const { data: verifyData } = await supabase.auth.verifyOtp({
+      token_hash: linkData!.properties!.hashed_token,
+      type: 'magiclink',
+    })
+    testUserId = verifyData.user!.id
+
+    // User-scoped Client für RPC-Calls (hybrid_search nutzt auth.uid())
+    userClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${verifyData.session!.access_token}` } },
+    })
 
     // Test-Dokumente mit OCR-Text für Volltextsuche anlegen
     const docs = [
@@ -24,6 +43,7 @@ describe('Suche', () => {
         title: 'Rechnung von Stadtwerke München',
         ocr_text: 'Stadtwerke München GmbH. Rechnung für Stromlieferung. Rechnungsnummer: SM-2024-001. Betrag: 127,50 EUR.',
         document_type: 'invoice',
+        user_id: testUserId,
       },
       {
         original_filename: 'vertrag-mietvertrag.pdf',
@@ -35,6 +55,7 @@ describe('Suche', () => {
         title: 'Mietvertrag Wohnung Schwabing',
         ocr_text: 'Mietvertrag zwischen Vermieter Hans Schmidt und Mieter Anna Müller. Objekt: 3-Zimmer-Wohnung in München-Schwabing. Kaltmiete: 1.200 EUR monatlich.',
         document_type: 'contract',
+        user_id: testUserId,
       },
       {
         original_filename: 'arztbrief.pdf',
@@ -46,6 +67,7 @@ describe('Suche', () => {
         title: 'Arztbrief Dr. Weber',
         ocr_text: 'Dr. med. Weber, Praxis für Innere Medizin. Diagnose: Grippaler Infekt. Therapie: Bettruhe und Ibuprofen.',
         document_type: 'medical_letter',
+        user_id: testUserId,
       },
     ]
 
@@ -100,13 +122,13 @@ describe('Suche', () => {
     expect(testResults.length).toBe(0)
   })
 
-  // --- hybrid_search RPC ---
+  // --- hybrid_search RPC (nutzt User-Client wegen auth.uid()) ---
 
   it('hybrid_search RPC mit Dummy-Embedding liefert Volltext-Ergebnisse', async () => {
     // Null-Embedding (1024 Nullen) → Vector-Rank ist 0, nur Fulltext zählt
     const zeroEmbedding = JSON.stringify(new Array(1024).fill(0))
 
-    const { data, error } = await supabase.rpc('hybrid_search', {
+    const { data, error } = await userClient.rpc('hybrid_search', {
       query_text: 'Stromlieferung Rechnung',
       query_embedding: zeroEmbedding,
       match_count: 10,
@@ -122,7 +144,7 @@ describe('Suche', () => {
   it('hybrid_search kann nach document_type filtern', async () => {
     const zeroEmbedding = JSON.stringify(new Array(1024).fill(0))
 
-    const { data, error } = await supabase.rpc('hybrid_search', {
+    const { data, error } = await userClient.rpc('hybrid_search', {
       query_text: 'München',
       query_embedding: zeroEmbedding,
       match_count: 10,

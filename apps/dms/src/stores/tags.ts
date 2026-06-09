@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/composables/useAuth'
 import type { Tag } from '@/lib/database.types'
 
 export const useTagsStore = defineStore('tags', () => {
+  const { user } = useAuth()
   const tags = ref<Tag[]>([])
   const loading = ref(false)
 
@@ -25,7 +27,7 @@ export const useTagsStore = defineStore('tags', () => {
   async function createTag(name: string, color?: string): Promise<Tag> {
     const { data, error } = await supabase
       .from('tags')
-      .insert({ name, color })
+      .insert({ name, color, user_id: user.value!.id })
       .select()
       .single()
 

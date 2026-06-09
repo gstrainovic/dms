@@ -2,16 +2,27 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'http://127.0.0.1:54321'
-const SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+const SERVICE_ROLE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
 
 describe('Auto-Tagging + Schema-Extraktion', () => {
   let supabase: SupabaseClient
+  let testUserId: string
   const testDocIds: string[] = []
   const testTagIds: string[] = []
 
-  beforeAll(() => {
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  beforeAll(async () => {
+    supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+
+    // Test-User erstellen
+    const email = 'vitest-tagging@test.local'
+    await supabase.auth.admin.createUser({ email, email_confirm: true })
+    const { data: linkData } = await supabase.auth.admin.generateLink({ type: 'magiclink', email })
+    const { data: verifyData } = await supabase.auth.verifyOtp({
+      token_hash: linkData!.properties!.hashed_token,
+      type: 'magiclink',
+    })
+    testUserId = verifyData.user!.id
   })
 
   afterAll(async () => {
@@ -33,7 +44,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
   it('erstellt Tag mit Name und Farbe', async () => {
     const { data, error } = await supabase
       .from('tags')
-      .insert({ name: 'Rechnung-Test', color: '#FF5733' })
+      .insert({ name: 'Rechnung-Test', color: '#FF5733', user_id: testUserId })
       .select()
       .single()
 
@@ -48,14 +59,14 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
 
     const { data: first } = await supabase
       .from('tags')
-      .insert({ name })
+      .insert({ name, user_id: testUserId })
       .select()
       .single()
     testTagIds.push(first!.id)
 
     const { error } = await supabase
       .from('tags')
-      .insert({ name })
+      .insert({ name, user_id: testUserId })
       .select()
       .single()
 
@@ -76,6 +87,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
         storage_path: `documents/${sha256}/tagged.pdf`,
         sha256,
         status: 'extracted',
+        user_id: testUserId,
       })
       .select()
       .single()
@@ -83,7 +95,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
 
     const { data: tag } = await supabase
       .from('tags')
-      .insert({ name: 'ai-tag-' + Date.now() })
+      .insert({ name: 'ai-tag-' + Date.now(), user_id: testUserId })
       .select()
       .single()
     testTagIds.push(tag!.id)
@@ -121,6 +133,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
         storage_path: `documents/${sha256}/manual.pdf`,
         sha256,
         status: 'ready',
+        user_id: testUserId,
       })
       .select()
       .single()
@@ -128,7 +141,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
 
     const { data: tag } = await supabase
       .from('tags')
-      .insert({ name: 'manual-tag-' + Date.now() })
+      .insert({ name: 'manual-tag-' + Date.now(), user_id: testUserId })
       .select()
       .single()
     testTagIds.push(tag!.id)
@@ -154,6 +167,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
         storage_path: `documents/${sha256}/removable.pdf`,
         sha256,
         status: 'ready',
+        user_id: testUserId,
       })
       .select()
       .single()
@@ -161,7 +175,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
 
     const { data: tag } = await supabase
       .from('tags')
-      .insert({ name: 'remove-me-' + Date.now() })
+      .insert({ name: 'remove-me-' + Date.now(), user_id: testUserId })
       .select()
       .single()
     testTagIds.push(tag!.id)
@@ -204,6 +218,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
         status: 'extracted',
         document_type: 'invoice',
         ocr_text: 'Rechnung Nr. 2024-001, Betrag: 250,00 EUR',
+        user_id: testUserId,
       })
       .select()
       .single()
@@ -243,6 +258,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
         storage_path: `documents/${sha256}/editable.pdf`,
         sha256,
         status: 'extracted',
+        user_id: testUserId,
       })
       .select()
       .single()
@@ -310,6 +326,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
         status: 'extracted',
         document_type: 'invoice',
         schema_id: schema!.id,
+        user_id: testUserId,
       })
       .select('id, document_type, schema_id')
       .single()
@@ -359,6 +376,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
         storage_path: `documents/${sha256}/filterable.pdf`,
         sha256,
         status: 'ready',
+        user_id: testUserId,
       })
       .select()
       .single()
@@ -366,7 +384,7 @@ describe('Auto-Tagging + Schema-Extraktion', () => {
 
     const { data: tag } = await supabase
       .from('tags')
-      .insert({ name: tagName, color: '#00FF00' })
+      .insert({ name: tagName, color: '#00FF00', user_id: testUserId })
       .select()
       .single()
     testTagIds.push(tag!.id)

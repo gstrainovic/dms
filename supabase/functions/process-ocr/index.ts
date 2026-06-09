@@ -147,6 +147,7 @@ Deno.serve(async (req: Request) => {
 
     let ocrText: string;
     let pageCount: number;
+    let ocrMethod: "pdf2txt" | "mistral_ocr";
     const isPdf = doc.mime_type === "application/pdf";
 
     // PDF: Zuerst lokale Text-Extraktion versuchen
@@ -155,6 +156,7 @@ Deno.serve(async (req: Request) => {
       if (localResult) {
         ocrText = localResult.text;
         pageCount = localResult.pageCount;
+        ocrMethod = "pdf2txt";
         console.log(
           `PDF-Text lokal extrahiert: ${pageCount} Seiten, ${ocrText.length} Zeichen`,
         );
@@ -164,12 +166,14 @@ Deno.serve(async (req: Request) => {
         const result = await callMistralOcr(buffer, doc.mime_type, mistralKey);
         ocrText = result.text;
         pageCount = result.pageCount;
+        ocrMethod = "mistral_ocr";
       }
     } else {
       // Bilder: immer Mistral OCR
       const result = await callMistralOcr(buffer, doc.mime_type, mistralKey);
       ocrText = result.text;
       pageCount = result.pageCount;
+      ocrMethod = "mistral_ocr";
     }
 
     // OCR-Text speichern
@@ -178,6 +182,7 @@ Deno.serve(async (req: Request) => {
       .update({
         ocr_text: ocrText,
         page_count: pageCount,
+        ocr_method: ocrMethod,
         status: "ocr_done",
       })
       .eq("id", documentId);

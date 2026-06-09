@@ -4,7 +4,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
@@ -34,22 +33,24 @@ function makeUniquePng(): Uint8Array {
   return result;
 }
 
+// Auth-Token für Edge Function Calls (wird in beforeAll gesetzt)
+let userAccessToken: string;
+let testUserId: string;
+
 async function callFunction(
   name: string,
   body: any,
-  authKey = ANON_KEY_HEADER,
+  authKey?: string,
 ): Promise<Response> {
   return fetch(`${FUNCTIONS_URL}/${name}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${authKey}`,
+      Authorization: `Bearer ${authKey ?? userAccessToken}`,
     },
     body: JSON.stringify(body),
   });
 }
-
-const ANON_KEY_HEADER = SUPABASE_ANON_KEY;
 
 async function uploadFile(file: Blob, filename: string): Promise<Response> {
   const formData = new FormData();
@@ -58,7 +59,7 @@ async function uploadFile(file: Blob, filename: string): Promise<Response> {
   return fetch(`${FUNCTIONS_URL}/upload-document`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${ANON_KEY_HEADER}`,
+      Authorization: `Bearer ${userAccessToken}`,
     },
     body: formData,
   });
@@ -95,8 +96,22 @@ describe("Edge Functions Integration", () => {
   let supabase: SupabaseClient;
   const cleanupDocIds: string[] = [];
 
-  beforeAll(() => {
+  beforeAll(async () => {
     supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    // Test-User erstellen für authentifizierte Edge Function Calls
+    const email = "vitest-edge@test.local";
+    await supabase.auth.admin.createUser({ email, email_confirm: true });
+    const { data: linkData } = await supabase.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+    const { data: verifyData } = await supabase.auth.verifyOtp({
+      token_hash: linkData!.properties!.hashed_token,
+      type: "magiclink",
+    });
+    testUserId = verifyData.user!.id;
+    userAccessToken = verifyData.session!.access_token;
   });
 
   afterAll(async () => {
@@ -120,7 +135,7 @@ describe("Edge Functions Integration", () => {
 
   describe("upload-document", () => {
     it("lädt PNG-Datei hoch und gibt ID + Status zurück", async () => {
-      const file = new Blob([makeUniquePng()], { type: "image/png" });
+      const file = new Blob([makeUniquePng() as any], { type: "image/png" });
       const res = await uploadFile(file, `test-${Date.now()}.png`);
 
       expect(res.status).toBe(201);
@@ -134,7 +149,7 @@ describe("Edge Functions Integration", () => {
       const res = await fetch(`${FUNCTIONS_URL}/upload-document`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${ANON_KEY_HEADER}`,
+          Authorization: `Bearer ${userAccessToken}`,
           "Content-Type": "multipart/form-data; boundary=---",
         },
         body: '-----\r\nContent-Disposition: form-data; name="empty"\r\n\r\n\r\n-------\r\n',
@@ -147,7 +162,7 @@ describe("Edge Functions Integration", () => {
 
     it("erkennt SHA-256 Duplikate", async () => {
       const uniquePng = makeUniquePng();
-      const file = new Blob([uniquePng], { type: "image/png" });
+      const file = new Blob([uniquePng as any], { type: "image/png" });
       const filename = `dup-test-${Date.now()}.png`;
 
       // Erster Upload
@@ -157,7 +172,7 @@ describe("Edge Functions Integration", () => {
       cleanupDocIds.push(data1.id);
 
       // Zweiter Upload (gleicher Inhalt)
-      const file2 = new Blob([uniquePng], { type: "image/png" });
+      const file2 = new Blob([uniquePng as any], { type: "image/png" });
       const res2 = await uploadFile(file2, filename);
       expect(res2.status).toBe(409);
       const data2 = await res2.json();
@@ -165,7 +180,7 @@ describe("Edge Functions Integration", () => {
     }, 15000);
 
     it("Dokument existiert in DB nach Upload", async () => {
-      const file = new Blob([makeUniquePng()], { type: "image/png" });
+      const file = new Blob([makeUniquePng() as any], { type: "image/png" });
       const res = await uploadFile(file, `db-check-${Date.now()}.png`);
       const { id } = await res.json();
       cleanupDocIds.push(id);
@@ -180,10 +195,11 @@ describe("Edge Functions Integration", () => {
       expect(doc!.mime_type).toBe("image/png");
       expect(doc!.sha256).toMatch(/^[0-9a-f]{64}$/);
       expect(doc!.storage_path).toMatch(/^documents\/[0-9a-f]{64}\/.+/);
+      expect(doc!.user_id).toBe(testUserId);
     }, 15000);
 
     it("Datei existiert in Storage nach Upload", async () => {
-      const file = new Blob([makeUniquePng()], { type: "image/png" });
+      const file = new Blob([makeUniquePng() as any], { type: "image/png" });
       const res = await uploadFile(file, `storage-check-${Date.now()}.png`);
       const { id } = await res.json();
       cleanupDocIds.push(id);
@@ -211,7 +227,7 @@ describe("Edge Functions Integration", () => {
 
     it("komplette Pipeline: Upload → OCR → Extract → Embed → ready", async () => {
       // Upload via Edge Function
-      const file = new Blob([makeUniquePng()], { type: "image/png" });
+      const file = new Blob([makeUniquePng() as any], { type: "image/png" });
       const uploadRes = await uploadFile(file, `pipeline-test-${Date.now()}.png`);
       const { id } = await uploadRes.json();
       pipelineDocId = id;
@@ -320,7 +336,7 @@ describe("Edge Functions Integration", () => {
 
   describe("search Edge Function", () => {
     it("liefert Ergebnisse für gültige Query", async () => {
-      // Zuerst Seed-Daten anlegen mit Embeddings
+      // Zuerst Seed-Daten anlegen mit user_id
       const { data: doc } = await supabase
         .from("documents")
         .insert({
@@ -334,6 +350,7 @@ describe("Edge Functions Integration", () => {
           ocr_text:
             "Stromrechnung der Stadtwerke. Betrag: 150 Euro. Kundennummer: 12345.",
           document_type: "invoice",
+          user_id: testUserId,
         })
         .select("id")
         .single();
@@ -357,7 +374,7 @@ describe("Edge Functions Integration", () => {
   });
 
   describe("chat Edge Function", () => {
-    it("gibt Antwort mit Sources zurück", async () => {
+    it("gibt Antwort mit Sources zurück (dedupliziert nach Dokument)", async () => {
       const res = await callFunction("chat", {
         message: "Was steht in meinen Dokumenten?",
       });
@@ -367,6 +384,19 @@ describe("Edge Functions Integration", () => {
       expect(typeof data.reply).toBe("string");
       expect(data.reply.length).toBeGreaterThan(0);
       expect(data.sources).toBeInstanceOf(Array);
+
+      // Sources müssen nach Dokument-ID dedupliziert sein
+      const sourceIds = data.sources.map((s: any) => s.id);
+      const uniqueIds = [...new Set(sourceIds)];
+      expect(sourceIds.length).toBe(uniqueIds.length);
+
+      // Sources dürfen nicht mehr sein als tatsächlich existierende User-Dokumente
+      const { count } = await supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", testUserId)
+        .eq("status", "ready");
+      expect(data.sources.length).toBeLessThanOrEqual(count ?? 0);
     }, 30000);
 
     it("gibt 400 für leere Nachricht zurück", async () => {
@@ -378,13 +408,13 @@ describe("Edge Functions Integration", () => {
     }, 15000);
   });
 
-  // --- Validierungstests ---
+  // --- Validierungstests (nutzen SERVICE_ROLE_KEY, da Pipeline-Funktionen keine User-Auth prüfen) ---
 
   describe("Validierung", () => {
     it("process-ocr gibt Fehler für ungültige documentId", async () => {
       const res = await callFunction("process-ocr", {
         documentId: "00000000-0000-0000-0000-000000000000",
-      });
+      }, SERVICE_ROLE_KEY);
 
       expect(res.status).toBe(500);
       const data = await res.json();
@@ -393,7 +423,7 @@ describe("Edge Functions Integration", () => {
     }, 15000);
 
     it("extract-data gibt Fehler für fehlende documentId", async () => {
-      const res = await callFunction("extract-data", {});
+      const res = await callFunction("extract-data", {}, SERVICE_ROLE_KEY);
       expect(res.status).toBe(500);
 
       const data = await res.json();
@@ -401,7 +431,7 @@ describe("Edge Functions Integration", () => {
     }, 15000);
 
     it("generate-embed gibt Fehler für fehlende documentId", async () => {
-      const res = await callFunction("generate-embed", {});
+      const res = await callFunction("generate-embed", {}, SERVICE_ROLE_KEY);
       expect(res.status).toBe(500);
 
       const data = await res.json();

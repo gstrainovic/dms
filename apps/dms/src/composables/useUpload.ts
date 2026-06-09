@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/composables/useAuth'
 
 export interface UploadItem {
   id: string
@@ -11,6 +12,7 @@ export interface UploadItem {
 }
 
 export function useUpload() {
+  const { user } = useAuth()
   const items = ref<UploadItem[]>([])
   const uploading = ref(false)
 
@@ -113,6 +115,7 @@ export function useUpload() {
           storage_path: storagePath,
           sha256,
           status: 'uploaded',
+          user_id: user.value!.id,
         })
         .select()
         .single()

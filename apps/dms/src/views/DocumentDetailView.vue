@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDocumentsStore } from '@/stores/documents'
 import type { Document, DocumentField, Tag as TagType } from '@/lib/database.types'
+import { getDocumentUrl, isPreviewable, isImage, isPdf } from '@/composables/useDocumentFile'
 import TagEditor from '@/components/TagEditor.vue'
 import FieldsEditor from '@/components/FieldsEditor.vue'
 import Card from 'primevue/card'
@@ -25,6 +26,7 @@ const loading = ref(true)
 
 const editingTitle = ref(false)
 const titleDraft = ref('')
+const previewUrl = ref<string | null>(null)
 
 const statusSeverity = computed(() => {
   if (!document.value) return undefined
@@ -57,6 +59,9 @@ onMounted(async () => {
     document.value = doc
     fields.value = docFields
     tags.value = docTags
+    if (doc && isPreviewable(doc.mime_type)) {
+      previewUrl.value = await getDocumentUrl(doc.storage_path)
+    }
   } finally {
     loading.value = false
   }
@@ -78,6 +83,19 @@ async function saveTitle() {
   } catch {
     toast.add({ severity: 'error', summary: 'Fehler beim Speichern', life: 3000 })
   }
+}
+
+async function downloadFile() {
+  if (!document.value) return
+  const url = previewUrl.value ?? await getDocumentUrl(document.value.storage_path)
+  if (!url) {
+    toast.add({ severity: 'error', summary: 'Download-URL konnte nicht erstellt werden', life: 3000 })
+    return
+  }
+  const a = window.document.createElement('a')
+  a.href = url
+  a.download = document.value.original_filename
+  a.click()
 }
 
 function confirmDelete() {
@@ -121,8 +139,31 @@ function confirmDelete() {
           <Button icon="pi pi-pencil" text severity="secondary" size="small" @click="startEditTitle" />
         </template>
       </div>
-      <Button icon="pi pi-trash" severity="danger" text @click="confirmDelete" />
+      <div class="flex gap-2">
+        <Button icon="pi pi-download" severity="secondary" text @click="downloadFile" label="Download" />
+        <Button icon="pi pi-trash" severity="danger" text @click="confirmDelete" />
+      </div>
     </div>
+
+    <!-- Vorschau -->
+    <Card v-if="previewUrl && document">
+      <template #title>Vorschau</template>
+      <template #content>
+        <div class="flex justify-center">
+          <img
+            v-if="isImage(document.mime_type)"
+            :src="previewUrl"
+            :alt="document.original_filename"
+            class="max-w-full max-h-[600px] object-contain rounded"
+          />
+          <iframe
+            v-else-if="isPdf(document.mime_type)"
+            :src="previewUrl"
+            class="w-full h-[600px] rounded border"
+          />
+        </div>
+      </template>
+    </Card>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <!-- Metadaten -->
@@ -152,6 +193,13 @@ function confirmDelete() {
             <div class="flex justify-between">
               <span class="text-surface-500">Seiten</span>
               <span>{{ document.page_count ?? '–' }}</span>
+            </div>
+            <div v-if="document.ocr_method" class="flex justify-between">
+              <span class="text-surface-500">OCR-Methode</span>
+              <Tag
+                :value="document.ocr_method === 'pdf2txt' ? 'PDF-Text (lokal)' : 'Mistral OCR (KI)'"
+                :severity="document.ocr_method === 'pdf2txt' ? 'info' : 'warn'"
+              />
             </div>
             <div class="flex justify-between">
               <span class="text-surface-500">Erstellt</span>

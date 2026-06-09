@@ -2,9 +2,16 @@
 import { ref, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useChat, type ChatMessage } from '@/composables/useChat'
+import { marked } from 'marked'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
+
+marked.setOptions({ breaks: true, gfm: true })
+
+function renderMarkdown(text: string): string {
+  return marked.parse(text, { async: false }) as string
+}
 
 const router = useRouter()
 const { messages, loading, hasMessages, sendMessage, clearChat } = useChat()
@@ -69,9 +76,14 @@ function formatTime(date: Date) {
           class="max-w-2xl rounded-lg p-3"
           :class="msg.role === 'user'
             ? 'bg-primary text-primary-contrast'
-            : 'bg-surface-100'"
+            : 'bg-surface-50 dark:bg-surface-800'"
         >
-          <p class="whitespace-pre-wrap text-sm">{{ msg.content }}</p>
+          <div
+            v-if="msg.role === 'assistant'"
+            class="text-sm chat-markdown"
+            v-html="renderMarkdown(msg.content)"
+          />
+          <p v-else class="whitespace-pre-wrap text-sm">{{ msg.content }}</p>
 
           <!-- Quellen -->
           <div v-if="msg.sources?.length" class="mt-2 pt-2 border-t border-surface-300">
@@ -96,7 +108,7 @@ function formatTime(date: Date) {
 
       <!-- Typing-Indikator -->
       <div v-if="loading" class="flex justify-start">
-        <div class="bg-surface-100 rounded-lg p-3">
+        <div class="bg-surface-50 dark:bg-surface-800 rounded-lg p-3">
           <i class="pi pi-spin pi-spinner text-sm" /> Denkt nach...
         </div>
       </div>
@@ -120,3 +132,48 @@ function formatTime(date: Date) {
     </div>
   </div>
 </template>
+
+<style scoped>
+.chat-markdown :deep(h1),
+.chat-markdown :deep(h2),
+.chat-markdown :deep(h3) {
+  font-weight: 700;
+  margin: 0.5em 0 0.25em;
+}
+.chat-markdown :deep(h1) { font-size: 1.15em; }
+.chat-markdown :deep(h2) { font-size: 1.1em; }
+.chat-markdown :deep(h3) { font-size: 1.05em; }
+.chat-markdown :deep(p) { margin: 0.35em 0; }
+.chat-markdown :deep(ul),
+.chat-markdown :deep(ol) {
+  margin: 0.35em 0;
+  padding-left: 1.5em;
+}
+.chat-markdown :deep(ul) { list-style: disc; }
+.chat-markdown :deep(ol) { list-style: decimal; }
+.chat-markdown :deep(li) { margin: 0.15em 0; }
+.chat-markdown :deep(strong) { font-weight: 700; }
+.chat-markdown :deep(code) {
+  background: var(--p-surface-200);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+.chat-markdown :deep(pre) {
+  background: var(--p-surface-200);
+  padding: 0.75em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+.chat-markdown :deep(pre code) {
+  background: none;
+  padding: 0;
+}
+.chat-markdown :deep(blockquote) {
+  border-left: 3px solid var(--p-surface-300);
+  padding-left: 0.75em;
+  margin: 0.5em 0;
+  opacity: 0.85;
+}
+</style>

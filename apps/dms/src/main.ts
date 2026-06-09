@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { createHead } from '@unhead/vue/client'
 import PrimeVue from 'primevue/config'
 import Aura from '@primevue/themes/aura'
 import ToastService from 'primevue/toastservice'
@@ -20,8 +21,10 @@ void (() => {
 })()
 
 const app = createApp(App)
+const head = createHead()
 
 app.use(createPinia())
+app.use(head)
 app.use(router)
 app.use(PrimeVue, {
   theme: {

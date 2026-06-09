@@ -97,7 +97,7 @@ function highlightExcerpt(text: string): string {
     </div>
 
     <!-- Fehler -->
-    <div v-if="error" class="p-3 bg-red-50 text-red-700 rounded">
+    <div v-if="error" class="p-3 bg-red-500/10 text-red-400 rounded">
       {{ error }}
     </div>
 
@@ -141,7 +141,7 @@ function highlightExcerpt(text: string): string {
     <div v-else-if="!loading" class="text-center p-12 text-surface-400">
       <i class="pi pi-search text-5xl mb-4 block" />
       <p>Geben Sie einen Suchbegriff ein, um Ihre Dokumente zu durchsuchen.</p>
-      <p class="text-sm mt-2">Volltext durchsucht Titel und OCR-Text. Hybrid nutzt zusätzlich KI-Embeddings.</p>
+      <p class="text-sm mt-2"><b>Volltext</b> sucht exakte Wörter in Titel und OCR-Text. <b>Hybrid (KI)</b> findet auch inhaltlich ähnliche Dokumente per KI-Embedding.</p>
     </div>
   </div>
 </template>
