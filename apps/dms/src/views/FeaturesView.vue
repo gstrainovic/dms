@@ -41,9 +41,10 @@ useHead({
           <i class="pi pi-search text-primary-500"></i> Hybrid-Suche
         </h2>
         <p class="text-surface-600 dark:text-surface-400">
-          Kombiniert klassische Volltextsuche (PostgreSQL tsvector, deutsch) mit semantischer Vektorsuche
-          (pgvector, Mistral Embed 1024-dim). Die Gewichtung ist konfigurierbar — Standard: 40% Volltext, 60% Vektor.
-          Zusätzlich filterbar nach Dokumenttyp und Tags.
+          Finden Sie Dokumente auch dann, wenn Sie den genauen Wortlaut nicht mehr wissen. Die Suche versteht,
+          was Sie meinen: „Zahnarztrechnung vom Frühjahr“ findet auch die Rechnung, in der nur „Praxis Dr. Müller,
+          Behandlung 12.03.“ steht. Exakte Angaben wie Rechnungsnummern oder Namen treffen weiterhin punktgenau.
+          Die Treffer lassen sich nach Dokumenttyp und Tags eingrenzen.
         </p>
       </section>
 

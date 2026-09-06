@@ -33,7 +33,7 @@ test.describe('Marketing-Seiten', () => {
     await expect(page.getByRole('heading', { name: 'Features' })).toBeVisible()
     await expect(page.getByText('Mistral OCR')).toBeVisible()
     await expect(page.getByText('Feld-Extraktion')).toBeVisible()
-    await expect(page.getByText('Volltextsuche')).toBeVisible()
+    await expect(page.getByText('genauen Wortlaut nicht mehr wissen')).toBeVisible()
     await expect(page.getByText('Retrieval-Augmented Generation')).toBeVisible()
     await expect(page.getByText('Flexibler Upload')).toBeVisible()
     await expect(page.getByText('Sicherheit')).toBeVisible()
