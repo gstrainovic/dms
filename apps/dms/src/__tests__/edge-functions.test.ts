@@ -345,11 +345,13 @@ describe("Edge Functions Integration", () => {
 
       const { data: doc } = await supabase
         .from("documents")
-        .select("ocr_text, page_count, mime_type, title, document_type")
+        .select("ocr_text, page_count, mime_type, title, document_type, ocr_method")
         .eq("id", id)
         .single();
 
       expect(doc!.mime_type).toBe("application/pdf");
+      // Digitales PDF muss lokal extrahiert werden, nicht per Mistral OCR
+      expect(doc!.ocr_method).toBe("pdf2txt");
       expect(doc!.ocr_text).toBeTruthy();
       expect(doc!.ocr_text!.length).toBeGreaterThan(50);
       expect(doc!.page_count).toBeGreaterThan(0);

@@ -1,9 +1,6 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
-import {
-  definePDFJSModule,
-  extractText,
-  getDocumentProxy,
-} from "https://esm.sh/unpdf";
+// Version gepinnt: ungepinnt lieferte esm.sh still ein neues PDF.js (v6) ohne pdf.destroy()
+import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@1.8.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,8 +61,7 @@ async function tryLocalPdfExtraction(
   buffer: ArrayBuffer,
 ): Promise<{ text: string; pageCount: number } | null> {
   try {
-    await definePDFJSModule(() => import("https://esm.sh/unpdf/pdfjs"));
-
+    // unpdf nutzt standardmäßig seinen serverless PDF.js-Build, kein definePDFJSModule nötig
     const pdf = await getDocumentProxy(new Uint8Array(buffer));
     const { totalPages, text } = await extractText(pdf, { mergePages: false });
 
@@ -74,7 +70,8 @@ async function tryLocalPdfExtraction(
     const totalChars = pageTexts.reduce((sum, t) => sum + t.trim().length, 0);
     const avgCharsPerPage = totalPages > 0 ? totalChars / totalPages : 0;
 
-    await pdf.destroy();
+    // PDF.js v6: destroy() liegt auf dem loadingTask, nicht mehr auf dem DocumentProxy
+    await pdf.loadingTask.destroy();
 
     if (avgCharsPerPage >= MIN_CHARS_PER_PAGE) {
       return {
