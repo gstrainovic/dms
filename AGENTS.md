@@ -22,10 +22,18 @@ Der Privatkunde zahlt für die KI-Kosten, der Geschäftskunde dafür, dass er si
 Nicht der Selbsthoster ist das Risiko, sondern ein Anbieter, der das Projekt günstiger hostet. AGPL macht das unattraktiv, weil er seine Änderungen offenlegen muss. Das CLA sichert das Recht, Geschäftskunden eine kommerzielle Lizenz zu geben.
 
 **Umsetzungsreihenfolge**
-1. Verbrauch messen (Usage-Tabelle), weil beide Modelle das brauchen und es Daten für realistische Limits liefert
-2. Pläne und Limit-Durchsetzung
-3. BYOK pro Organisation
-4. Zahlung via Stripe
+Siehe `todo.md`. Kern: Der AI-Proxy aus auto-service wird geteilt, DMS baut Zählung, Limits und Stripe nicht neu.
+
+## AI-Proxy (Entscheidung vom 06.09.2026)
+
+`~/projects/auto-service/server/` enthält bereits einen Hono-Proxy mit Mistral-Durchleitung, Zählung pro Nutzer und Monat, Plan-Limits (402 bei Überschreitung), Stripe-Checkout, Portal und Webhook. Store und Token-Prüfung sind per Dependency Injection austauschbar (Memory für Tests, InstantDB für auto-service).
+
+- Der Proxy wird in ein eigenes Repo `~/projects/ai-proxy` herausgelöst. Beide Apps nutzen denselben Code, aber **je eine eigene Instanz** (getrennte Nutzerbasen).
+- auto-service: Node-Container neben InstantDB, wie heute.
+- DMS: Hono läuft offiziell in Supabase Edge Functions (hono.dev/docs/getting-started/supabase-functions). Der Proxy wird als Edge Function mit Supabase-Store und Supabase-JWT-Prüfung ausgeliefert, kein zusätzlicher Container.
+- **Kein Monorepo für beide Apps:** verschiedene Datenbanken (InstantDB vs. Supabase), Paketmanager (npm vs. pnpm), Deployments und Lizenzen. Geteilt wird nur der Proxy.
+- **Browser-BYOK (Key im Client direkt zu Mistral) wird entfernt.** BYOK für Geschäftskunden läuft server-seitig über den Proxy mit Key pro Organisation.
+- auto-service für sich braucht **keine** Supabase Edge Functions: Das hiesse den ganzen Supabase-Stack (~10 Container) neben InstantDB zu betreiben, nur für eine Funktion.
 
 ## Lizenz
 

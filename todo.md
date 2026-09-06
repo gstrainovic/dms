@@ -1,37 +1,37 @@
 # Offene Punkte
 
-Ziel und Reihenfolge stehen in `AGENTS.md` unter «Geschäftsmodell».
+Ziel und Entscheidungen stehen in `AGENTS.md` unter «Geschäftsmodell» und «AI-Proxy».
 
-## 1. Verbrauch messen
-- [ ] Migration: Tabelle `usage_events` (user_id, kind: ocr_page | chat_request | embedding_chunk, amount, created_at) plus RLS
-- [ ] `process-ocr` schreibt Seitenzahl nach jedem Mistral-OCR-Aufruf (nicht bei lokaler Extraktion)
-- [ ] `chat` schreibt eine Anfrage pro Aufruf
-- [ ] `generate-embed` schreibt Chunk-Anzahl
-- [ ] `extract-data` schreibt eine Anfrage pro Aufruf
-- [ ] RPC `monthly_usage(user_id)` für die Summen des laufenden Monats
-- [ ] Dashboard zeigt Verbrauch des Monats
-- [ ] Tests: nach Pipeline-Durchlauf stimmen die Zähler
+## 1. AI-Proxy aus auto-service herauslösen (Repo `~/projects/ai-proxy`)
+- [ ] `server/` und `src/shared/plans.ts` in eigenes Repo mit package.json, Tests, Dockerfile
+- [ ] auto-service nutzt das Paket (dev:proxy, Playwright, deploy/docker-compose)
+- [ ] Browser-BYOK in auto-service entfernen, Proxy verpflichtend
+- [ ] Tests in beiden Repos grün
 
-## 2. Pläne und Limit
-- [ ] Spalte `plan` am Nutzerprofil (starter | pro | business), Default starter
-- [ ] Limits pro Plan zentral definiert (OCR-Seiten, Chat-Anfragen pro Monat)
-- [ ] Prüfung vor jedem kostenpflichtigen Aufruf, bei Überschreitung 402 mit klarer Meldung
-- [ ] Upload-View und Chat zeigen die Meldung verständlich an
+## 2. Proxy für Supabase vorbereiten
+- [ ] Supabase-Store (Zähler, Abos) neben dem InstantDB-Store
+- [ ] Supabase-JWT-Prüfung neben der InstantDB-Token-Prüfung
+- [ ] Route `/v1/embeddings` mit Zählung
+- [ ] Entry-Point für Supabase Edge Functions (Hono auf Deno)
+
+## 3. DMS anbinden
+- [ ] Migration: Tabellen `usage` und `subscriptions` plus RLS
+- [ ] Edge Function `ai-proxy` mit Supabase-Store und JWT-Prüfung
+- [ ] `process-ocr`, `extract-data`, `generate-embed`, `chat` rufen Mistral über den Proxy auf
+- [ ] Einstellungen zeigen Plan, Nutzung, Checkout und Kundenportal
 - [ ] Preisseite nennt die tatsächlichen Limits
-- [ ] Tests: Limit erreicht → Aufruf abgelehnt, Dokument bekommt Status error mit Hinweis
+- [ ] Tests: Zähler nach Pipeline-Durchlauf, 402 bei Limit, Webhook setzt Plan
 
-## 3. Bring your own Key (Geschäftskunden)
-- [ ] Tabelle `organizations` und Zuordnung Nutzer → Organisation
-- [ ] Mistral-Key pro Organisation verschlüsselt in Supabase Vault
-- [ ] Einstellungen: Key eintragen, testen, entfernen (nie im Klartext anzeigen)
-- [ ] Edge Functions lösen den Key der Organisation auf, Fallback auf Plattform-Key
-- [ ] Verbrauch mit eigenem Key zählt nicht gegen das Limit
-- [ ] Tests: Key-Auflösung, Fallback, kein Key-Leak in Responses
+## 4. Server-seitiges BYOK für Geschäftskunden
+- [ ] Organisationen und Zuordnung Nutzer → Organisation
+- [ ] Key pro Organisation verschlüsselt im Store, Eingabe und Test in den Einstellungen
+- [ ] Proxy nutzt Organisations-Key statt Plattform-Key, Verbrauch zählt nicht gegen das Limit
+- [ ] Tests: Auflösung, Fallback, kein Key in Responses
 
-## 4. Zahlung
-- [ ] Stripe Checkout für Pro und Business
-- [ ] Webhook setzt `plan` am Nutzerprofil
-- [ ] Kündigung setzt zurück auf starter
+## Betrieb auf Hetzner
+- [ ] Ein Server (mindestens 8 GB RAM), Docker Compose mit Caddy
+- [ ] auto-service: PWA, InstantDB, Proxy-Container
+- [ ] DMS: Frontend, selbst gehosteter Supabase-Stack
 
 ## Restposten Texte
 - [ ] FAQ und Über-uns nennen noch «OCR-Erkennung» und «Auto-Tagging», an Features-Seite angleichen
