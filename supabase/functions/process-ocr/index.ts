@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 // Version gepinnt: ungepinnt lieferte esm.sh still ein neues PDF.js (v6) ohne pdf.destroy()
 import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@1.8.1";
+import { aiFetchAsService, aiJson } from "../_shared/ai-proxy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -99,16 +100,6 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-  const mistralKey = Deno.env.get("MISTRAL_API_KEY");
-  if (!mistralKey) {
-    return new Response(
-      JSON.stringify({ error: "MISTRAL_API_KEY ist nicht konfiguriert" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
-  }
 
   let documentId: string | null = null;
 
@@ -160,14 +151,14 @@ Deno.serve(async (req: Request) => {
       } else {
         // Fallback: Mistral OCR für gescannte PDFs
         console.log("Lokaler Text unzureichend, sende an Mistral OCR...");
-        const result = await callMistralOcr(buffer, doc.mime_type, mistralKey);
+        const result = await callMistralOcr(buffer, doc.mime_type, doc.user_id);
         ocrText = result.text;
         pageCount = result.pageCount;
         ocrMethod = "mistral_ocr";
       }
     } else {
       // Bilder: immer Mistral OCR
-      const result = await callMistralOcr(buffer, doc.mime_type, mistralKey);
+      const result = await callMistralOcr(buffer, doc.mime_type, doc.user_id);
       ocrText = result.text;
       pageCount = result.pageCount;
       ocrMethod = "mistral_ocr";
@@ -206,11 +197,11 @@ Deno.serve(async (req: Request) => {
   }
 });
 
-/** Mistral OCR API aufrufen (für gescannte PDFs und Bilder) */
+/** Mistral OCR über den ai-proxy aufrufen (zählt Seiten auf den Nutzer, setzt Limit durch) */
 async function callMistralOcr(
   buffer: ArrayBuffer,
   mimeType: string,
-  apiKey: string,
+  userId: string,
 ): Promise<{ text: string; pageCount: number }> {
   const uint8 = new Uint8Array(buffer);
 
@@ -241,21 +232,8 @@ async function callMistralOcr(
         table_format: "markdown",
       };
 
-  const response = await fetch("https://api.mistral.ai/v1/ocr", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(ocrPayload),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Mistral OCR failed (${response.status}): ${err}`);
-  }
-
-  const data = await response.json();
+  const response = await aiFetchAsService("/v1/ocr", userId, ocrPayload);
+  const data = await aiJson(response, "Mistral OCR");
   const pages = processPages(data.pages || []);
 
   return {

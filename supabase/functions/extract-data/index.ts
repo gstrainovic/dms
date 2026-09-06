@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { aiFetchAsService, aiJson, ensureNotLimited } from '../_shared/ai-proxy.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -39,13 +40,6 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
-  const mistralKey = Deno.env.get('MISTRAL_API_KEY')
-  if (!mistralKey) {
-    return new Response(
-      JSON.stringify({ error: 'MISTRAL_API_KEY ist nicht konfiguriert' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
-  }
 
   let documentId: string | null = null
 
@@ -74,13 +68,7 @@ Deno.serve(async (req: Request) => {
       .join('\n')
 
     // Schritt 1: Dokumenttyp erkennen
-    const typeResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${mistralKey}`,
-      },
-      body: JSON.stringify({
+    const typeResponse = await aiFetchAsService('/v1/chat/completions', userId, {
         model: 'mistral-small-latest',
         response_format: { type: 'json_object' },
         messages: [
@@ -100,12 +88,9 @@ Antworte als JSON: {"document_type": "...", "title": "...", "tags": ["tag1", "ta
             content: doc.ocr_text.substring(0, 4000),
           },
         ],
-      }),
-    })
+      })
 
-    if (!typeResponse.ok) throw new Error('Typ-Erkennung fehlgeschlagen')
-
-    const typeResult = await typeResponse.json()
+    const typeResult = await aiJson(typeResponse, 'Typ-Erkennung')
     const classification = JSON.parse(typeResult.choices[0].message.content)
 
     // Schema für den erkannten Typ finden
@@ -118,13 +103,7 @@ Antworte als JSON: {"document_type": "...", "title": "...", "tags": ["tag1", "ta
 
     if (matchingSchema) {
       const fieldNames = Object.keys(matchingSchema.schema.properties || {})
-      const extractResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${mistralKey}`,
-        },
-        body: JSON.stringify({
+      const extractResponse = await aiFetchAsService('/v1/chat/completions', userId, {
           model: 'mistral-small-latest',
           response_format: { type: 'json_object' },
           messages: [
@@ -140,22 +119,15 @@ Gib nur die gefundenen Felder zurück. Nutze null für nicht gefundene Felder.`,
               content: doc.ocr_text.substring(0, 8000),
             },
           ],
-        }),
-      })
+        })
 
-      if (extractResponse.ok) {
+      if ((await ensureNotLimited(extractResponse)).ok) {
         const extractResult = await extractResponse.json()
         extractedFields = JSON.parse(extractResult.choices[0].message.content)
       }
     } else {
       // Dynamischer Fallback: Felder automatisch erkennen
-      const fallbackResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${mistralKey}`,
-        },
-        body: JSON.stringify({
+      const fallbackResponse = await aiFetchAsService('/v1/chat/completions', userId, {
           model: 'mistral-small-latest',
           response_format: { type: 'json_object' },
           messages: [
@@ -170,10 +142,9 @@ Maximal 10 Felder. Nutze deutsche Feldnamen in snake_case.`,
               content: doc.ocr_text.substring(0, 8000),
             },
           ],
-        }),
-      })
+        })
 
-      if (fallbackResponse.ok) {
+      if ((await ensureNotLimited(fallbackResponse)).ok) {
         const fallbackResult = await fallbackResponse.json()
         extractedFields = JSON.parse(fallbackResult.choices[0].message.content)
       }

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { aiFetchAsService, aiJson } from '../_shared/ai-proxy.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,13 +31,6 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
-  const mistralKey = Deno.env.get('MISTRAL_API_KEY')
-  if (!mistralKey) {
-    return new Response(
-      JSON.stringify({ error: 'MISTRAL_API_KEY ist nicht konfiguriert' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
-  }
 
   let documentId: string | null = null
 
@@ -47,7 +41,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: doc } = await supabase
       .from('documents')
-      .select('id, ocr_text')
+      .select('id, ocr_text, user_id')
       .eq('id', documentId)
       .single()
 
@@ -63,24 +57,8 @@ Deno.serve(async (req: Request) => {
     const chunks = chunkText(doc.ocr_text)
 
     // Embeddings generieren (batch)
-    const response = await fetch('https://api.mistral.ai/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${mistralKey}`,
-      },
-      body: JSON.stringify({
-        model: 'mistral-embed',
-        input: chunks,
-      }),
-    })
-
-    if (!response.ok) {
-      const err = await response.text()
-      throw new Error(`Mistral Embed failed: ${err}`)
-    }
-
-    const embedData = await response.json()
+    const response = await aiFetchAsService('/v1/embeddings', doc.user_id, { model: 'mistral-embed', input: chunks })
+    const embedData = await aiJson(response, 'Mistral Embed')
 
     // Embeddings speichern (pgvector erwartet '[x,y,z,...]' String-Format)
     const inserts = embedData.data.map((item: any, index: number) => ({

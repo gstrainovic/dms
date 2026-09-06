@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { aiFetchAsUser, aiJson, AiProxyError } from '../_shared/ai-proxy.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,13 +11,6 @@ Deno.serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  const mistralKey = Deno.env.get('MISTRAL_API_KEY')
-  if (!mistralKey) {
-    return new Response(
-      JSON.stringify({ error: 'MISTRAL_API_KEY ist nicht konfiguriert' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
-  }
 
   // User-scoped client for RPC (hybrid_search uses auth.uid())
   const authHeader = req.headers.get('Authorization') ?? ''
@@ -53,23 +47,8 @@ Deno.serve(async (req: Request) => {
     }
 
     // Query-Embedding generieren
-    const embedResponse = await fetch('https://api.mistral.ai/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${mistralKey}`,
-      },
-      body: JSON.stringify({
-        model: 'mistral-embed',
-        input: [query],
-      }),
-    })
-
-    if (!embedResponse.ok) {
-      throw new Error(`Mistral Embed failed: ${await embedResponse.text()}`)
-    }
-
-    const embedData = await embedResponse.json()
+    const embedResponse = await aiFetchAsUser('/v1/embeddings', authHeader, { model: 'mistral-embed', input: [query] })
+    const embedData = await aiJson(embedResponse, 'Mistral Embed')
     const queryEmbedding = embedData.data[0].embedding
 
     // Hybrid Search via DB-Funktion (user-scoped through auth.uid())
@@ -90,9 +69,11 @@ Deno.serve(async (req: Request) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error) {
+    // 402 = Monatslimit erreicht: Meldung und Status unverändert ans Frontend
+    const status = error instanceof AiProxyError ? error.status : 500
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   }
 })

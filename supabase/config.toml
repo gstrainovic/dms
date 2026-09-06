@@ -379,6 +379,9 @@ verify_jwt = false
 verify_jwt = false
 [functions.chat]
 verify_jwt = false
+# Hono prüft Nutzer-JWT bzw. Service-Role selbst; Stripe-Webhook kommt ohne JWT
+[functions.ai-proxy]
+verify_jwt = false
 
 [analytics]
 enabled = true

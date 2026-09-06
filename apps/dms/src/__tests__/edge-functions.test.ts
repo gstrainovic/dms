@@ -246,6 +246,35 @@ describe("Edge Functions Integration", () => {
     }, 15000);
   });
 
+
+  // --- ai-proxy Edge Function (Zähler, Limits, Katalog) ---
+
+  describe("ai-proxy Edge Function", () => {
+    it("health antwortet ohne Auth", async () => {
+      const res = await fetch(`${FUNCTIONS_URL}/ai-proxy/health`);
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ ok: true });
+    });
+
+    it("lehnt /me/usage ohne Token ab", async () => {
+      const res = await fetch(`${FUNCTIONS_URL}/ai-proxy/me/usage`);
+      expect(res.status).toBe(401);
+    });
+
+    it("liefert DMS-Plan, Limits und Katalog für den angemeldeten Nutzer", async () => {
+      const res = await fetch(`${FUNCTIONS_URL}/ai-proxy/me/usage`, {
+        headers: { Authorization: `Bearer ${userAccessToken}` },
+      });
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.plan).toBe("starter");
+      expect(body.limits).toEqual({ ocrPages: 100, chatTokens: 500_000 });
+      expect(Object.keys(body.plans)).toEqual(["starter", "pro"]);
+      expect(body.plans.pro.priceChfPerMonth).toBe(19);
+      expect(body.usage).toEqual({ ocrPages: expect.any(Number), chatTokens: expect.any(Number) });
+    });
+  });
+
   // --- Tier 2: Mistral-Pipeline ---
 
   describe("Mistral-Pipeline (OCR → Extract → Embed)", () => {
@@ -437,6 +466,67 @@ describe("Edge Functions Integration", () => {
   });
 
   // --- Validierungstests (nutzen SERVICE_ROLE_KEY, da Pipeline-Funktionen keine User-Auth prüfen) ---
+
+
+  // --- Nutzungszählung und Limits über den Proxy ---
+
+  describe("Nutzungszählung über ai-proxy", () => {
+    const month = new Date().toISOString().slice(0, 7);
+
+    async function readUsage() {
+      const res = await fetch(`${FUNCTIONS_URL}/ai-proxy/me/usage`, {
+        headers: { Authorization: `Bearer ${userAccessToken}` },
+      });
+      return (await res.json()).usage as { ocrPages: number; chatTokens: number };
+    }
+
+    // Eigener Service-Role-Client: `supabase` trägt nach verifyOtp die Nutzer-Session und darf per RLS nicht schreiben
+    const adminDb = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+
+    async function setUsage(ocrPages: number, chatTokens: number) {
+      const { error } = await adminDb
+        .from("ai_usage")
+        .upsert({ user_id: testUserId, month, ocr_pages: ocrPages, chat_tokens: chatTokens });
+      if (error) throw error;
+    }
+
+    afterAll(async () => {
+      // Zähler des Testnutzers zurücksetzen, damit ein erneuter Lauf nicht am Limit startet
+      await adminDb.from("ai_usage").delete().eq("user_id", testUserId).eq("month", month);
+    });
+
+    it("hat OCR-Seiten und Tokens der vorherigen Pipeline-Läufe gezählt", async () => {
+      const usage = await readUsage();
+      expect(usage.ocrPages).toBeGreaterThanOrEqual(1);
+      expect(usage.chatTokens).toBeGreaterThan(0);
+    });
+
+    it("stoppt die Pipeline bei erreichtem OCR-Limit mit verständlicher Meldung", async () => {
+      await setUsage(100, 0);
+      const file = new Blob([makeUniqueFixturePng() as any], { type: "image/png" });
+      const uploadRes = await uploadFile(file, `limit-test-${Date.now()}.png`);
+      const { id } = await uploadRes.json();
+      cleanupDocIds.push(id);
+
+      const status = await waitForStatus(supabase, id, ["ready", "error"], 30000);
+      expect(status).toBe("error");
+      const { data: doc } = await supabase.from("documents").select("error_message").eq("id", id).single();
+      expect(doc!.error_message).toContain("Monatslimit erreicht");
+      expect(doc!.error_message).toContain("Starter");
+    }, 35000);
+
+    it("chat antwortet 402 mit Limit-Meldung bei erreichtem Token-Limit", async () => {
+      await setUsage(0, 500_000);
+      const res = await fetch(`${FUNCTIONS_URL}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${userAccessToken}` },
+        body: JSON.stringify({ message: "Was steht in meinen Dokumenten?" }),
+      });
+      expect(res.status).toBe(402);
+      const body = await res.json();
+      expect(body.error).toContain("Monatslimit erreicht");
+    }, 20000);
+  });
 
   describe("Validierung", () => {
     it("process-ocr gibt Fehler für ungültige documentId", async () => {

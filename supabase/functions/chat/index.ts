@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { aiFetchAsUser, aiJson, AiProxyError } from '../_shared/ai-proxy.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,13 +59,6 @@ Deno.serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  const mistralKey = Deno.env.get('MISTRAL_API_KEY')
-  if (!mistralKey) {
-    return new Response(
-      JSON.stringify({ error: 'MISTRAL_API_KEY ist nicht konfiguriert' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
-  }
 
   const authHeader = req.headers.get('Authorization') ?? ''
   const supabase = createClient(
@@ -92,23 +86,8 @@ Deno.serve(async (req: Request) => {
     }
 
     // 1. Query-Embedding generieren
-    const embedResponse = await fetch('https://api.mistral.ai/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${mistralKey}`,
-      },
-      body: JSON.stringify({
-        model: 'mistral-embed',
-        input: [message],
-      }),
-    })
-
-    if (!embedResponse.ok) {
-      throw new Error(`Embedding failed: ${await embedResponse.text()}`)
-    }
-
-    const embedData = await embedResponse.json()
+    const embedResponse = await aiFetchAsUser('/v1/embeddings', authHeader, { model: 'mistral-embed', input: [message] })
+    const embedData = await aiJson(embedResponse, 'Embedding')
     const queryEmbedding = embedData.data[0].embedding
 
     // 2. Relevante Dokument-Chunks suchen
@@ -166,25 +145,14 @@ ${context || 'Keine relevanten Dokumente gefunden.'}`,
       { role: 'user', content: message },
     ]
 
-    const chatResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${mistralKey}`,
-      },
-      body: JSON.stringify({
+    const chatResponse = await aiFetchAsUser('/v1/chat/completions', authHeader, {
         model: 'mistral-small-latest',
         messages,
         tools: TOOLS,
         tool_choice: 'auto'
-      }),
-    })
+      })
 
-    if (!chatResponse.ok) {
-      throw new Error(`Chat failed: ${await chatResponse.text()}`)
-    }
-
-    let chatData = await chatResponse.json()
+    let chatData = await aiJson(chatResponse, 'Chat')
     let responseMessage = chatData.choices[0].message
 
     // 5. Tool Calls verarbeiten
@@ -265,27 +233,16 @@ ${context || 'Keine relevanten Dokumente gefunden.'}`,
       }
 
       // Finalen Response mit Tool-Ergebnissen einholen
-      const finalResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${mistralKey}`,
-        },
-        body: JSON.stringify({
+      const finalResponse = await aiFetchAsUser('/v1/chat/completions', authHeader, {
           model: 'mistral-small-latest',
           messages: [
             ...messages,
             responseMessage,
             ...toolResults
           ]
-        }),
-      })
+        })
 
-      if (!finalResponse.ok) {
-        throw new Error(`Final chat failed: ${await finalResponse.text()}`)
-      }
-
-      chatData = await finalResponse.json()
+      chatData = await aiJson(finalResponse, 'Chat')
       responseMessage = chatData.choices[0].message
     }
 
@@ -306,9 +263,11 @@ ${context || 'Keine relevanten Dokumente gefunden.'}`,
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error) {
+    // 402 = Monatslimit erreicht: Meldung und Status unverändert ans Frontend
+    const status = error instanceof AiProxyError ? error.status : 500
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   }
 })

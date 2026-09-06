@@ -34,6 +34,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_subscriptions: {
+        Row: {
+          current_period_end: number | null
+          plan: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_period_end?: number | null
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_period_end?: number | null
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_usage: {
+        Row: {
+          chat_tokens: number
+          month: string
+          ocr_pages: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_tokens?: number
+          month: string
+          ocr_pages?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_tokens?: number
+          month?: string
+          ocr_pages?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -341,6 +395,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ai_add_usage: {
+        Args: {
+          p_chat_tokens: number
+          p_month: string
+          p_ocr_pages: number
+          p_user_id: string
+        }
+        Returns: {
+          chat_tokens: number
+          month: string
+          ocr_pages: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ai_usage"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       hybrid_search: {
         Args: {
           filter_document_type?: string
@@ -496,7 +571,6 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
 
 // Convenience type aliases used throughout the app
 export type Document = Tables<'documents'>
