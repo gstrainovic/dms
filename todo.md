@@ -25,8 +25,25 @@ Ziel und Entscheidungen stehen in `AGENTS.md` unter «Geschäftsmodell» und «A
 - [x] Einstellungen zeigen Plan, Nutzung, Upgrade und Kundenportal (`BillingCard.vue`)
 - [x] Preisseite nennt die tatsächlichen Limits
 - [x] Tests: Zähler nach Pipeline-Durchlauf, 402 bei OCR- und Token-Limit, E2E Abo-Karte
-- [ ] Stripe im DMS konfigurieren: Produkt Pro anlegen, `STRIPE_*` in `.env`, Webhook-URL `/functions/v1/ai-proxy/stripe/webhook`, Checkout einmal end-to-end im Test-Modus prüfen (Webhook-Logik ist im Proxy getestet)
+- [ ] ~~Stripe im DMS konfigurieren~~ ersetzt durch Payrexx, siehe Abschnitt Zahlungsanbieter
 - [ ] Upload-Ansicht: Limit-Meldung aus `error_message` prominent zeigen (heute wie jeder andere Fehler)
+
+## Zahlungsanbieter: Payrexx statt Stripe (Entscheidung 06.09.2026, geprüfte Preise)
+
+Beste Preis-Leistung und Datenschutz: Schweizer Anbieter, Daten in der Schweiz, pro Zahlung rund 35 bis 40 Rappen
+günstiger als Stripe (Karte 1,65 % + 0.18 statt 2,9 % + 0.30; TWINT 1,25 % + 0.18 statt 1,9 % + 0.30),
+Standard-Abo 19 CHF/Monat, 30 % Startup-Rabatt, keine Einrichtungsgebühr. Abos später umzuziehen kostet Kunden,
+deshalb von Anfang an Payrexx. Beide Apps (auto-service und dms) stellen um.
+
+**Blockiert, bis das Payrexx-Konto beantragt und freigegeben ist** (Einzelunternehmen: Ausweis, Wohnsitznachweis,
+Konto auf eigenen Namen; Handelsregister erst ab 100k Umsatz nötig).
+
+- [ ] Payrexx-Konto anlegen (Standard, Startup-Rabatt), verifizieren, Payrexx Pay aktivieren, Testmodus einschalten, API-Key und Webhook-Signing-Key notieren
+- [ ] ai-proxy: austauschbare Billing-Schnittstelle, Stripe-Implementierung behalten, Payrexx-Implementierung ergänzen
+      (Gateway mit subscriptionState, Webhook mit X-Webhook-Signature HMAC-SHA256 hex, Status active/overdue/failed/cancelled/in_notice,
+      Kundenportal via POST /AuthToken, Kündigen via DELETE /Subscription/{id}); Tests gegen dokumentierte Payloads
+- [ ] DMS auf Payrexx umstellen (Env: PAYREXX_INSTANCE, PAYREXX_API_SECRET, PAYREXX_WEBHOOK_SECRET), Checkout und Kündigung einmal im Testmodus durchspielen
+- [ ] Datenschutzerklärung: Stripe durch Payrexx AG, Thun ersetzen
 
 ## 4. Server-seitiges BYOK für Geschäftskunden
 - [ ] Organisationen und Zuordnung Nutzer → Organisation

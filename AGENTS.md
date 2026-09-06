@@ -37,6 +37,24 @@ Siehe `todo.md`. Kern: Der AI-Proxy aus auto-service wird geteilt, DMS baut Zäh
 - **Umgesetzt (06.09.2026):** ai-proxy v0.2.0 auf GitHub, auto-service nutzt es als npm-Paket, DMS als Edge Function `ai-proxy` mit gepinntem Import per Commit-Hash (`https://raw.githubusercontent.com/gstrainovic/ai-proxy/<sha von v0.2.0>/src/edge.ts`, Tags wären verschiebbar) und per-Function `deno.json` als Import-Map. Der Plan-Katalog ist pro App injizierbar (`createEdgeApp(env, { plans })`), Pipeline-Functions rufen den Proxy mit Service-Role + `x-user-id`.
 - **Proxy-Update in DMS:** neuen Tag in ai-proxy setzen, dann dessen Commit-Hash in `supabase/functions/ai-proxy/index.ts` (und ggf. `deno.json`) nachziehen, Edge Runtime neu starten.
 
+## Zahlungsanbieter (Entscheidung vom 06.09.2026)
+
+**Payrexx (Thun) statt Stripe**, für auto-service und dms. Grund: beste Preis-Leistung und Datenschutz.
+Geprüfte Preise (Preisseiten, 06.09.2026), online, CHF:
+
+| Anbieter | Monat | Karte CH | TWINT |
+|---|---|---|---|
+| Stripe | 0 | 2,9 % + 0.30 | 1,9 % + 0.30 |
+| Payrexx Standard | 19 (Startup −30 %) | 1,65 % + 0.18 | 1,25 % + 0.18 |
+| PostFinance E-Com Bundle | 19.90 | 1,55 % min. 0.20 + 0.18 | 1,3 % min. 0.20 + 0.18 |
+| wallee Basic | 19.95 | 1,55 % + 0.20 | 1,3 % + 0.20 |
+
+- Google Pay / Apple Pay kosten überall wie die hinterlegte Karte. Mollie ist für CH teurer (Schweizer Karten = Nicht-EWR, 3,25 %).
+- Break-even Payrexx gegen Stripe bei etwa 55 bis 80 zahlenden Abos, aber: Abos lassen sich nicht umziehen (Zahlungsmittel gehören dem Anbieter), deshalb von Anfang an Payrexx.
+- Payrexx-Fakten aus der Doku: TWINT-Abos ja (Tokenisierung), fehlgeschlagene Abbuchung wird einmal wiederholt (overdue → failed), Kundenportal per `POST /AuthToken` (Login-Link), Webhook JSON mit `X-Webhook-Signature` (HMAC-SHA256, hex, Raw-Body), bis zu 10 Zustellversuche, Auth per `X-API-KEY`, Testmodus mit Testkarten. Abo-Endpunkte sind als «experimental documentation» markiert. Kein TS-SDK, nur PHP.
+- Einzelunternehmen ohne Handelsregister ist bei Payrexx ausdrücklich möglich (Nachweis erst ab 100k CHF Umsatz).
+- Umsetzung erst, wenn das Konto freigegeben ist. Stripe-Code im Proxy bleibt (auto-service kann jederzeit zurück).
+
 ## Lizenz
 
 - AGPL-3.0-only für das gesamte Repo, `LICENSE` ist der offizielle Text von gnu.org.
