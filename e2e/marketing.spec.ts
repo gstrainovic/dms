@@ -31,12 +31,15 @@ test.describe('Marketing-Seiten', () => {
   test('Features: Überschrift und alle Sektionen', async ({ page }) => {
     await page.goto('/features')
     await expect(page.getByRole('heading', { name: 'Features' })).toBeVisible()
-    await expect(page.getByText('Mistral OCR')).toBeVisible()
-    await expect(page.getByText('Feld-Extraktion')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Texterkennung' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Automatische Sortierung' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Intelligente Suche' })).toBeVisible()
     await expect(page.getByText('genauen Wortlaut nicht mehr wissen')).toBeVisible()
-    await expect(page.getByText('Retrieval-Augmented Generation')).toBeVisible()
-    await expect(page.getByText('Flexibler Upload')).toBeVisible()
-    await expect(page.getByText('Sicherheit')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Fragen stellen statt suchen' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Hochladen in Sekunden' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Sicherheit & Datenschutz' })).toBeVisible()
+    // Keine Technik-Begriffe fuer Interessenten
+    await expect(page.getByText(/tsvector|pgvector|SHA-256|Row Level Security|Retrieval-Augmented/)).toHaveCount(0)
   })
 
   test('Preise: Starter und Pro Plan', async ({ page }) => {
