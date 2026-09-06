@@ -3,10 +3,12 @@
 Ziel und Entscheidungen stehen in `AGENTS.md` unter «Geschäftsmodell» und «AI-Proxy».
 
 ## 1. AI-Proxy aus auto-service herauslösen (Repo `~/projects/ai-proxy`)
-- [ ] `server/` und `src/shared/plans.ts` in eigenes Repo mit package.json, Tests, Dockerfile
-- [ ] auto-service nutzt das Paket (dev:proxy, Playwright, deploy/docker-compose)
-- [ ] Browser-BYOK in auto-service entfernen, Proxy verpflichtend
-- [ ] Tests in beiden Repos grün
+- [x] `server/` und `src/shared/plans.ts` in eigenes Repo mit package.json, Tests, Dockerfile
+- [x] auto-service nutzt das Paket (dev:proxy, Playwright, deploy/docker-compose)
+- [x] Browser-BYOK in auto-service entfernen, Proxy verpflichtend
+- [x] Tests in beiden Repos grün
+- [ ] Änderungen in auto-service committen (Working Tree enthielt schon WIP, Entscheidung beim Nutzer)
+- [ ] Repo `gstrainovic/ai-proxy` auf GitHub anlegen und pushen; `file:../ai-proxy` in auto-service danach optional durch `github:gstrainovic/ai-proxy` ersetzen
 
 ## 2. Proxy für Supabase vorbereiten
 - [ ] Supabase-Store (Zähler, Abos) neben dem InstantDB-Store
