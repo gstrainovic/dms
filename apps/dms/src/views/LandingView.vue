@@ -8,7 +8,7 @@ const router = useRouter()
 useHead({
   title: 'DMS — Intelligentes Dokumentenmanagement',
   meta: [
-    { name: 'description', content: 'Upload, OCR, Auto-Tagging, Hybrid-Suche und RAG-Chat — alles in einem System.' },
+    { name: 'description', content: 'Dokumente hochladen, automatisch sortieren lassen, in Sekunden wiederfinden und Fragen dazu stellen — alles in einem System.' },
   ],
 })
 </script>
@@ -39,33 +39,33 @@ useHead({
         <div class="grid md:grid-cols-3 gap-8">
           <div class="text-center p-6">
             <i class="pi pi-camera text-4xl text-primary-500 mb-4"></i>
-            <h3 class="font-semibold text-lg mb-2">OCR-Erkennung</h3>
-            <p class="text-surface-500">Automatische Texterkennung per Mistral OCR — auch bei gescannten Dokumenten und Fotos.</p>
+            <h3 class="font-semibold text-lg mb-2">Texterkennung</h3>
+            <p class="text-surface-500">Scans, Handyfotos und PDFs werden automatisch lesbar. Nichts mehr abtippen.</p>
           </div>
           <div class="text-center p-6">
             <i class="pi pi-tags text-4xl text-primary-500 mb-4"></i>
-            <h3 class="font-semibold text-lg mb-2">Auto-Tagging</h3>
-            <p class="text-surface-500">KI erkennt Dokumenttyp, extrahiert Felder und vergibt Tags automatisch.</p>
+            <h3 class="font-semibold text-lg mb-2">Automatische Sortierung</h3>
+            <p class="text-surface-500">Rechnung, Vertrag oder Arztbrief: Jedes Dokument wird erkannt, einsortiert und mit Schlagwörtern versehen.</p>
           </div>
           <div class="text-center p-6">
             <i class="pi pi-search text-4xl text-primary-500 mb-4"></i>
-            <h3 class="font-semibold text-lg mb-2">Hybrid-Suche</h3>
-            <p class="text-surface-500">Volltextsuche kombiniert mit semantischer Vektorsuche für beste Ergebnisse.</p>
+            <h3 class="font-semibold text-lg mb-2">Intelligente Suche</h3>
+            <p class="text-surface-500">Finden Sie Dokumente auch ohne den genauen Wortlaut. Die Suche versteht, was Sie meinen.</p>
           </div>
           <div class="text-center p-6">
             <i class="pi pi-comments text-4xl text-primary-500 mb-4"></i>
-            <h3 class="font-semibold text-lg mb-2">RAG-Chat</h3>
-            <p class="text-surface-500">Stellen Sie Fragen zu Ihren Dokumenten — die KI antwortet mit Quellenangaben.</p>
+            <h3 class="font-semibold text-lg mb-2">Fragen stellen statt suchen</h3>
+            <p class="text-surface-500">„Wann läuft mein Vertrag aus?“ Die Antwort kommt in Sekunden, mit Verweis auf die Quelle.</p>
           </div>
           <div class="text-center p-6">
             <i class="pi pi-upload text-4xl text-primary-500 mb-4"></i>
-            <h3 class="font-semibold text-lg mb-2">Einfacher Upload</h3>
-            <p class="text-surface-500">Drag &amp; Drop, Kamera-Aufnahme oder Dateiauswahl — PNG, JPG, PDF.</p>
+            <h3 class="font-semibold text-lg mb-2">Hochladen in Sekunden</h3>
+            <p class="text-surface-500">Ins Fenster ziehen, abfotografieren oder auswählen. PDF, PNG und JPG.</p>
           </div>
           <div class="text-center p-6">
             <i class="pi pi-shield text-4xl text-primary-500 mb-4"></i>
-            <h3 class="font-semibold text-lg mb-2">Datenschutz</h3>
-            <p class="text-surface-500">DSGVO-konform. Ihre Daten gehören Ihnen. Multi-User mit isolierten Daten.</p>
+            <h3 class="font-semibold text-lg mb-2">Sicherheit &amp; Datenschutz</h3>
+            <p class="text-surface-500">DSGVO-konform. Ihre Daten gehören Ihnen, und niemand sonst sieht sie.</p>
           </div>
         </div>
       </div>

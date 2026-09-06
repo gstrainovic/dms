@@ -57,7 +57,7 @@ export function useChat() {
           id: m.id,
           role: m.role as 'user' | 'assistant',
           content: m.content,
-          sources: m.sources as ChatSource[] | undefined,
+          sources: m.sources as unknown as ChatSource[] | undefined,
           timestamp: new Date(m.created_at)
         }))
       }
@@ -150,7 +150,7 @@ export function useChat() {
         id: assistMsg.id,
         role: 'assistant',
         content: assistMsg.content,
-        sources: assistMsg.sources as ChatSource[],
+        sources: assistMsg.sources as unknown as ChatSource[],
         timestamp: new Date(assistMsg.created_at)
       })
 

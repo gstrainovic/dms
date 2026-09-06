@@ -26,9 +26,9 @@ useHead({
         <p class="text-surface-500 mb-6">Für den Einstieg</p>
         <ul class="text-left space-y-2 mb-8 text-sm">
           <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Bis 100 Dokumente</li>
-          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> OCR &amp; Auto-Tagging</li>
-          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Volltextsuche</li>
-          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> RAG-Chat</li>
+          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Texterkennung &amp; automatische Sortierung</li>
+          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Suche nach Stichwörtern</li>
+          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Fragen an Ihre Dokumente stellen</li>
         </ul>
         <Button label="Kostenlos starten" class="w-full" severity="secondary" outlined @click="router.push('/login')" />
       </div>
@@ -41,7 +41,7 @@ useHead({
         <p class="text-surface-500 mb-6">Für den Alltag</p>
         <ul class="text-left space-y-2 mb-8 text-sm">
           <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Unbegrenzte Dokumente</li>
-          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Hybrid-Suche (Vektor + Volltext)</li>
+          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Intelligente Suche (versteht, was Sie meinen)</li>
           <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Prioritäts-Support</li>
           <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Custom Schemas</li>
         </ul>

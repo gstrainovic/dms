@@ -34,6 +34,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+          sources: Json | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+          sources?: Json | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          sources?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       document_embeddings: {
         Row: {
           chunk_index: number
@@ -438,6 +497,7 @@ export const Constants = {
   },
 } as const
 
+
 // Convenience type aliases used throughout the app
 export type Document = Tables<'documents'>
 export type Tag = Tables<'tags'>
@@ -446,4 +506,5 @@ export type DocumentTag = Tables<'document_tags'>
 export type DocumentEmbedding = Tables<'document_embeddings'>
 export type DocumentSchema = Tables<'document_schemas'>
 export type DocumentStatus = Document['status']
-
+export type ChatSession = Tables<'chat_sessions'>
+export type ChatMessage = Tables<'chat_messages'>

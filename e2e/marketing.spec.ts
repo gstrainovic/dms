@@ -14,12 +14,13 @@ test.describe('Marketing-Seiten', () => {
 
   test('Landing: Feature-Grid zeigt alle 6 Features', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByText('OCR-Erkennung').first()).toBeVisible()
-    await expect(page.getByText('Auto-Tagging').first()).toBeVisible()
-    await expect(page.getByText('Hybrid-Suche').first()).toBeVisible()
-    await expect(page.getByText('RAG-Chat').first()).toBeVisible()
-    await expect(page.getByText('Einfacher Upload')).toBeVisible()
-    await expect(page.getByText('Datenschutz').first()).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Texterkennung' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Automatische Sortierung' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Intelligente Suche' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Fragen stellen statt suchen' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Hochladen in Sekunden' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Sicherheit & Datenschutz' })).toBeVisible()
+    await expect(page.getByText(/Hybrid-Suche|RAG-Chat|Vektor/)).toHaveCount(0)
   })
 
   test('Landing: CTA navigiert zu Login', async ({ page }) => {
@@ -50,6 +51,8 @@ test.describe('Marketing-Seiten', () => {
     await expect(page.getByRole('heading', { name: 'Pro' })).toBeVisible()
     await expect(page.getByText('CHF 19')).toBeVisible()
     await expect(page.getByText('Empfohlen')).toBeVisible()
+    await expect(page.getByText('Intelligente Suche')).toBeVisible()
+    await expect(page.getByText(/Hybrid-Suche|RAG-Chat|Vektor/)).toHaveCount(0)
   })
 
   test('Über uns: Firma und Kontakt', async ({ page }) => {

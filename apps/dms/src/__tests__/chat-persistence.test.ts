@@ -41,17 +41,6 @@ const setupMocks = () => {
     return Promise.resolve(callback(defaultResponse));
   });
 
-  // Mock für chat_sessions select (loadLastSession)
-  mockSupabase.from.withArgs = (table: string) => {
-    if (table === 'chat_sessions') {
-      return {
-        ...mockSupabase,
-        limit: vi.fn().mockResolvedValue({ data: [{ id: 'session-1' }], error: null })
-      };
-    }
-    return mockSupabase;
-  };
-
   // Wir machen es einfacher: mockResolvedValue für die Endpunkte
   mockSupabase.limit.mockResolvedValue({ data: [{ id: 'session-1' }], error: null });
   mockSupabase.single.mockResolvedValue({ data: { id: 'new-id', created_at: new Date().toISOString(), content: 'test' }, error: null });
