@@ -1,5 +1,6 @@
 import { ref, computed, watch } from 'vue'
 import { supabase } from '@/lib/supabase'
+import { functionErrorMessage } from '@/lib/edge-errors'
 import { useAuth } from './useAuth'
 
 export interface ChatMessage {
@@ -130,7 +131,7 @@ export function useChat() {
         },
       })
 
-      if (fnError) throw new Error(fnError.message)
+      if (fnError) throw new Error(await functionErrorMessage(fnError))
 
       // 4. Assistant-Nachricht speichern
       const { data: assistMsg, error: aMsgErr } = await supabase

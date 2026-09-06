@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
+import { functionErrorMessage } from '@/lib/edge-errors'
 
 export interface SearchResult {
   id: string
@@ -73,7 +74,7 @@ export function useSearch() {
         },
       })
 
-      if (fnError) throw new Error(fnError.message)
+      if (fnError) throw new Error(await functionErrorMessage(fnError))
 
       results.value = data.results.map((r: any) => ({
         id: r.id,

@@ -13,6 +13,7 @@ import Dialog from 'primevue/dialog'
 import Chip from 'primevue/chip'
 import Select from 'primevue/select'
 import { useToast } from 'primevue/usetoast'
+import BillingCard from '@/components/BillingCard.vue'
 
 const schemasStore = useSchemasStore()
 const tagsStore = useTagsStore()
@@ -132,6 +133,9 @@ function schemaFieldCount(schema: Schema): number {
         </div>
       </template>
     </Card>
+
+    <!-- Abo & Nutzung (über ai-proxy) -->
+    <BillingCard />
 
     <!-- Dokumenten-Schemas -->
     <Card>

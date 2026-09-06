@@ -16,7 +16,7 @@ useHead({
 <template>
   <div class="max-w-4xl mx-auto px-4 py-12">
     <h1 class="text-3xl font-bold mb-4 text-center">Preise</h1>
-    <p class="text-center text-surface-500 mb-12">Einfach, transparent, fair.</p>
+    <p class="text-center text-surface-500 mb-12">Einfach, transparent, fair. Seiten zählen nur bei Scans und Fotos, digitale PDFs lesen wir ohne Seitenverbrauch.</p>
 
     <div class="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
       <!-- Free -->
@@ -25,7 +25,8 @@ useHead({
         <div class="text-4xl font-bold mb-1">Gratis</div>
         <p class="text-surface-500 mb-6">Für den Einstieg</p>
         <ul class="text-left space-y-2 mb-8 text-sm">
-          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Bis 100 Dokumente</li>
+          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> 100 Seiten Texterkennung pro Monat</li>
+          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> 500’000 KI-Tokens pro Monat für Auswertung, Suche und Fragen</li>
           <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Texterkennung &amp; automatische Sortierung</li>
           <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Suche nach Stichwörtern</li>
           <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Fragen an Ihre Dokumente stellen</li>
@@ -40,7 +41,8 @@ useHead({
         <div class="text-4xl font-bold mb-1">CHF 19<span class="text-lg text-surface-500">/Mt.</span></div>
         <p class="text-surface-500 mb-6">Für den Alltag</p>
         <ul class="text-left space-y-2 mb-8 text-sm">
-          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Unbegrenzte Dokumente</li>
+          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> 2’000 Seiten Texterkennung pro Monat</li>
+          <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> 10 Mio. KI-Tokens pro Monat</li>
           <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Intelligente Suche (versteht, was Sie meinen)</li>
           <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Prioritäts-Support</li>
           <li class="flex items-center gap-2"><i class="pi pi-check text-green-500"></i> Custom Schemas</li>

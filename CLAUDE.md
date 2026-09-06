@@ -120,16 +120,23 @@ apps/dms/                   — Vue 3 + PrimeVue Frontend
 packages/shared/            — AI-Pipeline, OCR, Retry, Image Utils, Queries
 supabase/
   migrations/               — 3 SQL-Migrations (Schema, Storage, RLS)
-  functions/                — 6 Edge Functions
+  functions/                — 7 Edge Functions (+ _shared/ für Plan-Katalog und Proxy-Client)
 ```
 
-### Edge Functions (6 Stück)
+### Edge Functions (7 Stück)
 1. `upload-document` — FormData Upload, SHA-256 Dedup, Storage, DB, triggers OCR
-2. `process-ocr` — Mistral OCR (PDF/Bild), Table-Replacement, triggers Extract
-3. `extract-data` — Dokumenttyp-Erkennung, Schema-Felder, Tags, triggers Embed
-4. `generate-embed` — Text-Chunking (1000/200), Mistral Embed Batch, pgvector
-5. `search` — Query-Embedding + hybrid_search RPC
-6. `chat` — RAG: Query-Embedding → Context-Retrieval → Mistral Chat
+2. `process-ocr` — lokale PDF-Extraktion (unpdf), sonst Mistral OCR via ai-proxy, triggers Extract
+3. `extract-data` — Dokumenttyp-Erkennung, Schema-Felder, Tags (Chat via ai-proxy), triggers Embed
+4. `generate-embed` — Text-Chunking (1000/200), Mistral Embed via ai-proxy, pgvector
+5. `search` — Query-Embedding via ai-proxy + hybrid_search RPC
+6. `chat` — RAG: Query-Embedding → Context-Retrieval → Mistral Chat, alles via ai-proxy
+7. `ai-proxy` — Hono-App aus dem Repo gstrainovic/ai-proxy (gepinnter Tag): hält den Mistral-Key, zählt
+   Verbrauch pro Nutzer/Monat (`ai_usage`), setzt Plan-Limits durch (402), Stripe-Checkout/Portal/Webhook
+
+**Kein Function ruft Mistral direkt.** `_shared/ai-proxy.ts` bietet `aiFetchAsUser` (Nutzer-JWT durchreichen,
+chat/search) und `aiFetchAsService` (Service-Role + `x-user-id`, Pipeline). 402 = Monatslimit: Meldung landet
+in `documents.error_message` bzw. als 402 beim Frontend (`lib/edge-errors.ts` liest sie aus dem Body).
+Plan-Katalog: `_shared/plans.ts` (Starter 100 Seiten / 500k Tokens, Pro 2000 / 10M), Preise auch in PricingView.
 
 ### Upload-Pipeline
 ```
@@ -149,6 +156,11 @@ Alle Functions setzen `status: 'error'` + `error_message` im Fehlerfall.
 - Vektor: pgvector `<=>` Distanz (Mistral Embed 1024-dim)
 - Kombiniert: `text_rank * 0.4 + vector_rank * 0.6`
 - Filter: document_type, tags
+
+### Abo & Nutzung (Frontend)
+- `lib/ai-proxy.ts` — fetchUsage/startCheckout/openPortal gegen `/functions/v1/ai-proxy`
+- `components/BillingCard.vue` — in den Einstellungen: Plan, Zähler mit Balken, Upgrade, Kundenportal
+- Tabellen `ai_usage`/`ai_subscriptions` werden nur vom Proxy geschrieben (Service-Role), Nutzer lesen eigene Zeilen
 
 ### Views (7 Stück)
 1. **Dashboard** — Stats (Gesamt/Bereit/Verarbeitung/Fehler), letzte Docs, Typ-Verteilung, Tags
@@ -219,7 +231,8 @@ pnpm dev:frontend
 - **`test-e2e.sh`** — E2E Test-Setup (wie test.sh, aber mit Playwright statt Vitest)
 
 ### Secrets
-- Mistral API Key in `.env` im Projektroot (Format: `MISTRAL_API_KEY=sk-...`)
+- Mistral API Key in `.env` im Projektroot (Format: `MISTRAL_API_KEY=sk-...`), gebraucht nur von `ai-proxy`
+- Stripe (optional): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_PRO`, `APP_URL` ebenfalls in `.env`
 - Wird automatisch nach `supabase/functions/.env` kopiert (von dev.sh/test.sh)
 - `supabase/functions/.env` ist in `.gitignore` — wird nie committed
 - `.env.example` zeigt das erwartete Format
@@ -237,3 +250,6 @@ pnpm dev:frontend
 - `supabase status` kann 0 zurueckgeben obwohl Container kaputt sind → dev.sh prueft DB-Container direkt via `docker ps`
 - Vite bevorzugt `.js` ueber `.ts` beim Resolven → NIEMALS `tsc` im `src/` laufen lassen (erzeugt .js Artefakte die Vite statt der .ts Quellen verwendet). `.gitignore` schliesst `apps/dms/src/**/*.js` aus
 - SELinux auf Fedora: Edge Functions brauchen `container_file_t` Kontext → wird automatisch von dev.sh/test.sh gesetzt
+- Edge Runtime lädt Function-Code nicht nach: nach Änderungen `docker restart supabase_edge_runtime_dms`; nach Änderungen an `config.toml` oder `supabase/functions/.env` `supabase stop && supabase start`
+- Direkt nach einem Neustart kann der Edge-Runtime-Container kurz keine DNS-Namen auflösen (`api.mistral.ai`) → Tests einfach wiederholen
+- Der Test-Client in `edge-functions.test.ts` trägt nach `verifyOtp` die Nutzer-Session; für Schreibzugriffe auf RLS-Tabellen einen separaten Service-Role-Client erzeugen

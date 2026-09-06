@@ -26,6 +26,19 @@ test.describe('Einstellungen', () => {
     await expect(page.getByText('Farbschema')).toBeVisible()
   })
 
+  test('Abo & Nutzung zeigt Plan, Zähler und Upgrade', async ({ page }) => {
+    await page.goto('/settings')
+    const card = page.getByTestId('billing-card')
+    await expect(card).toBeVisible()
+    await expect(card.getByText('Abo & Nutzung')).toBeVisible()
+    await expect(card.getByTestId('current-plan')).toHaveText(/Starter/)
+    await expect(card.getByText('Texterkennung (Seiten)')).toBeVisible()
+    await expect(card.getByText('KI-Tokens')).toBeVisible()
+    await expect(card.getByTestId('usage-ocrPages')).toHaveText(/\d+ von 100/)
+    await expect(card.getByTestId('usage-chatTokens')).toHaveText(/von 500’000/)
+    await expect(card.getByRole('button', { name: /Pro/ })).toBeVisible()
+  })
+
   test('Schemas-Tabelle sichtbar', async ({ page }) => {
     await page.goto('/settings')
     await expect(page.getByText('Dokumenten-Schemas')).toBeVisible()

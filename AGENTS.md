@@ -34,6 +34,8 @@ Siehe `todo.md`. Kern: Der AI-Proxy aus auto-service wird geteilt, DMS baut Zäh
 - **Kein Monorepo für beide Apps:** verschiedene Datenbanken (InstantDB vs. Supabase), Paketmanager (npm vs. pnpm), Deployments und Lizenzen. Geteilt wird nur der Proxy.
 - **Browser-BYOK (Key im Client direkt zu Mistral) wird entfernt.** BYOK für Geschäftskunden läuft server-seitig über den Proxy mit Key pro Organisation.
 - auto-service für sich braucht **keine** Supabase Edge Functions: Das hiesse den ganzen Supabase-Stack (~10 Container) neben InstantDB zu betreiben, nur für eine Funktion.
+- **Umgesetzt (06.09.2026):** ai-proxy v0.2.0 auf GitHub, auto-service nutzt es als npm-Paket, DMS als Edge Function `ai-proxy` mit gepinntem Import per Commit-Hash (`https://raw.githubusercontent.com/gstrainovic/ai-proxy/<sha von v0.2.0>/src/edge.ts`, Tags wären verschiebbar) und per-Function `deno.json` als Import-Map. Der Plan-Katalog ist pro App injizierbar (`createEdgeApp(env, { plans })`), Pipeline-Functions rufen den Proxy mit Service-Role + `x-user-id`.
+- **Proxy-Update in DMS:** neuen Tag in ai-proxy setzen, dann dessen Commit-Hash in `supabase/functions/ai-proxy/index.ts` (und ggf. `deno.json`) nachziehen, Edge Runtime neu starten.
 
 ## Lizenz
 
