@@ -11,14 +11,16 @@ Ziel und Entscheidungen stehen in `AGENTS.md` unter «Geschäftsmodell» und «A
 - [ ] Repo `gstrainovic/ai-proxy` auf GitHub anlegen und pushen; `file:../ai-proxy` in auto-service danach optional durch `github:gstrainovic/ai-proxy` ersetzen
 
 ## 2. Proxy für Supabase vorbereiten
-- [ ] Supabase-Store (Zähler, Abos) neben dem InstantDB-Store
-- [ ] Supabase-JWT-Prüfung neben der InstantDB-Token-Prüfung
-- [ ] Route `/v1/embeddings` mit Zählung
-- [ ] Entry-Point für Supabase Edge Functions (Hono auf Deno)
+- [x] Supabase-Store (Zähler, Abos) neben dem InstantDB-Store
+- [x] Supabase-JWT-Prüfung neben der InstantDB-Token-Prüfung
+- [x] Route `/v1/embeddings` mit Zählung
+- [x] Entry-Point für Supabase Edge Functions (Hono auf Deno)
+- [x] Migration `00007_ai_proxy.sql`: `ai_usage`, `ai_subscriptions`, RPC `ai_add_usage`, RLS
 
 ## 3. DMS anbinden
-- [ ] Migration: Tabellen `usage` und `subscriptions` plus RLS
-- [ ] Edge Function `ai-proxy` mit Supabase-Store und JWT-Prüfung
+- [ ] Pläne pro App: `PLANS` in ai-proxy ist auf auto-service zugeschnitten (free/basic/pro). `createApp` muss die Pläne injizierbar machen, DMS bringt eigene (Starter/Pro/Business mit eigenen Limits)
+- [ ] Edge Function `ai-proxy`, importiert `src/edge.ts` aus dem ai-proxy-Repo (Import-Map aus `deno.json`), Secret `MISTRAL_API_KEY`
+- [ ] DB-Typen regenerieren (`ai_usage`, `ai_subscriptions`), Aliase wieder anhängen
 - [ ] `process-ocr`, `extract-data`, `generate-embed`, `chat` rufen Mistral über den Proxy auf
 - [ ] Einstellungen zeigen Plan, Nutzung, Checkout und Kundenportal
 - [ ] Preisseite nennt die tatsächlichen Limits
