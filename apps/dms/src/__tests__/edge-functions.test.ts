@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { crc32 } from "node:zlib";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -31,6 +32,31 @@ function makeUniquePng(): Uint8Array {
   result.set(randomBytes, pngPrefix.length);
   result.set(iend, pngPrefix.length + randomBytes.length);
   return result;
+}
+
+// Erzeugt ein einzigartiges, aber gültiges PNG mit echtem Inhalt (für die Mistral-OCR-Pipeline):
+// fügt vor dem IEND-Chunk einen tEXt-Chunk mit Zufallsdaten und korrekter CRC ein.
+function makeUniqueFixturePng(): Uint8Array {
+  const fixture = readFileSync(
+    resolve(__dirname, "../../../../e2e/fixtures/test-rechnung.png"),
+  );
+  const iendOffset = fixture.length - 12; // IEND ist immer die letzten 12 Bytes
+  const nonce = Buffer.from(crypto.randomUUID(), "utf8");
+  const chunkData = Buffer.concat([Buffer.from("nonce\0", "utf8"), nonce]);
+  const typeAndData = Buffer.concat([Buffer.from("tEXt", "ascii"), chunkData]);
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(chunkData.length);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(typeAndData));
+  return new Uint8Array(
+    Buffer.concat([
+      fixture.subarray(0, iendOffset),
+      length,
+      typeAndData,
+      crc,
+      fixture.subarray(iendOffset),
+    ]),
+  );
 }
 
 // Auth-Token für Edge Function Calls (wird in beforeAll gesetzt)
@@ -227,7 +253,7 @@ describe("Edge Functions Integration", () => {
 
     it("komplette Pipeline: Upload → OCR → Extract → Embed → ready", async () => {
       // Upload via Edge Function
-      const file = new Blob([makeUniquePng() as any], { type: "image/png" });
+      const file = new Blob([makeUniqueFixturePng() as any], { type: "image/png" });
       const uploadRes = await uploadFile(file, `pipeline-test-${Date.now()}.png`);
       const { id } = await uploadRes.json();
       pipelineDocId = id;
