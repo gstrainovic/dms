@@ -28,6 +28,8 @@ Infomaniak Public Cloud (OpenStack) in der Schweiz, Domain und Server im selben 
 
 **Eigene VM pro Produkt.** auto-service (InstantDB, AI-Proxy als Node-Container, Caddy) und dms (Supabase-Stack mit AI-Proxy als Edge Function) teilen keinen Prozess; der Proxy läuft je App als eigene Instanz. Getrennt reisst ein voller Supabase-Stack InstantDB nicht mit. dms bekommt seine VM erst nach der Validierung; Supabase dafür ohne Studio, Analytics und Log-Pipeline betreiben, dann reichen 4 GB.
 
+Das OpenStack-Projekt existiert bereits (PCP-CTPZLR8, Region dc3-a, dort läuft die Instanz `wartungsheft` von auto-service). Zugang vom Laptop: `openstack --os-cloud PCP-CTPZLR8-dc3-a …` mit Application Credential in `~/.config/openstack/clouds.yaml`, DNS-API-Token (nur `dns:write`, Prüfen per `dig`) in `~/.config/infomaniak/token`. Die dms-Instanz kommt als zweiter Server ins selbe Projekt; Vorgehen und Stolpersteine (Security Group, MinIO nur noch auf quay.io, ein Caddy pro Instanz) stehen in `~/projects/auto-service/README.md` und `CLAUDE.md` unter «Produktion».
+
 ## Lizenz
 
 - AGPL-3.0-only für das gesamte Repo, `LICENSE` ist der offizielle Text von gnu.org.
