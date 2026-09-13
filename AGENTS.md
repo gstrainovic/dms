@@ -58,7 +58,9 @@ Geprüfte Preise (Preisseiten, 06.09.2026), online, CHF:
 
 ## Hosting
 
-Infomaniak VPS Lite in der Schweiz statt Hetzner: 2 vCPU/4 GB 7.20 CHF, 4 vCPU/8 GB 18 CHF (Preisseite September 2026); Hetzner CPX22 kostet 23.79 EUR, die günstige CX-Linie ist nicht verfügbar. Domain und Server liegen im selben Infomaniak-Konto, DNS per API. Kein GitHub Pages für Landing Pages, dessen Bedingungen schliessen Marketing für kommerzielle SaaS aus. auto-service geht zuerst online; dms kommt auf denselben Server, sobald es validiert ist, dann auf 8 GB heben.
+Infomaniak VPS Lite in der Schweiz statt Hetzner: 2 vCPU/4 GB 7.20 CHF, 4 vCPU/8 GB 18 CHF (Preisseite September 2026); Hetzner CPX22 kostet 23.79 EUR, die günstige CX-Linie ist nicht verfügbar. Domain und Server liegen im selben Infomaniak-Konto, DNS per API. Kein GitHub Pages für Landing Pages, dessen Bedingungen schliessen Marketing für kommerzielle SaaS aus.
+
+**Eigene VM pro Produkt.** auto-service (InstantDB, AI-Proxy als Node-Container, Caddy) und dms (Supabase-Stack mit AI-Proxy als Edge Function) teilen keinen Prozess; der Proxy läuft je App als eigene Instanz. Zwei VPS Lite mit 4 GB kosten 14.40 CHF, eine mit 8 GB 18 CHF, und getrennt reisst ein voller Supabase-Stack InstantDB nicht mit. dms bekommt seine VM erst nach der Validierung; Supabase dafür ohne Studio, Analytics und Log-Pipeline betreiben, dann reichen 4 GB.
 
 ## Lizenz
 
