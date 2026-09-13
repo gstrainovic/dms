@@ -24,7 +24,7 @@ Payrexx statt Stripe, Begründung und Preisvergleich im privaten Repo. Für die 
 
 ## Hosting (technisch)
 
-Infomaniak VPS Lite in der Schweiz, Domain und Server im selben Konto, DNS per API. Kein GitHub Pages für Landing Pages, dessen Bedingungen schliessen Marketing für kommerzielle SaaS aus.
+Infomaniak Public Cloud (OpenStack) in der Schweiz, Domain und Server im selben Konto, Instanzen per OpenStack-CLI, DNS per Infomaniak-API, Snapshots vor riskanten Änderungen. Kein GitHub Pages für Landing Pages, dessen Bedingungen schliessen Marketing für kommerzielle SaaS aus.
 
 **Eigene VM pro Produkt.** auto-service (InstantDB, AI-Proxy als Node-Container, Caddy) und dms (Supabase-Stack mit AI-Proxy als Edge Function) teilen keinen Prozess; der Proxy läuft je App als eigene Instanz. Getrennt reisst ein voller Supabase-Stack InstantDB nicht mit. dms bekommt seine VM erst nach der Validierung; Supabase dafür ohne Studio, Analytics und Log-Pipeline betreiben, dann reichen 4 GB.
 

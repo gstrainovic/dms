@@ -13,7 +13,7 @@ Zwei Produkte, null Kunden: Zuerst wird auto-service validiert (dort `business-p
 
 ## Sobald ein Kunde Ja sagt: Betrieb
 
-- [ ] Eigene Infomaniak VPS Lite (Schweiz, 2 vCPU / 4 GB, 7.20 CHF/Monat) für dms, getrennt von auto-service: Frontend und selbst gehosteter Supabase-Stack ohne Studio, Analytics und Log-Pipeline; Docker Compose mit Caddy; Domain für dms noch offen
+- [ ] Eigene Instanz in der Infomaniak Public Cloud (Schweiz, 2 vCPU / 4 GB) für dms, getrennt von auto-service, im selben OpenStack-Projekt: Frontend und selbst gehosteter Supabase-Stack ohne Studio, Analytics und Log-Pipeline; Docker Compose mit Caddy; Domain für dms noch offen
 - [ ] Erste Kunden per Jahresrechnung mit QR-Rechnung, kein Zahlungsanbieter
 - [ ] Upload-Ansicht: Limit-Meldung aus `error_message` prominent zeigen (heute wie jeder andere Fehler)
 
