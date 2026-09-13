@@ -1,28 +1,8 @@
 # AGENTS.md — Entscheidungen und Wissen zum DMS-Projekt
 
-Technische Architektur, Pipeline und Befehle stehen in `CLAUDE.md`. Hier stehen Geschäftsmodell, Lizenz und Learnings, die sich nicht aus dem Code ableiten lassen.
+Technische Architektur, Pipeline und Befehle stehen in `CLAUDE.md`. Hier stehen technische Entscheidungen, Lizenz und Learnings, die sich nicht aus dem Code ableiten lassen.
 
-## Geschäftsmodell (Entscheidung vom 06.09.2026)
-
-Das DMS ist Open Source (AGPL-3.0). Verkauft wird das Hosting, nicht die Software.
-
-**Privatkunden**
-Gehostet, Mistral-Key inklusive, monatliches Limit (OCR-Seiten, Chat-Anfragen). Der Kunde zahlt für KI-Kosten, die er sonst nicht hätte, plus Komfort.
-
-**Geschäftskunden**
-Gehostet, Wartung und Backups inklusive, mehrere Nutzer, Auftragsverarbeitungsvertrag (DSGVO). Der Mistral-Key ist inklusiv und über den höheren Preis gedeckt. Bring-your-own-Key ist eine **Option** für Firmen, die aus Compliance-Gründen ihren eigenen Mistral-Vertrag wollen. BYOK ist ein Feature, kein Rabatt.
-
-**Open-Source-Version**
-Die Community-Version kann alles, der Betreiber kümmert sich selbst um Betrieb, Backups, Updates. Kein Feature-Gating. Falls später eine Grenze nötig wird, dann bei Dingen, die nur im Firmenkontext zählen: SSO, Audit-Log, Mandanten, Support-SLA.
-
-**Preislogik in einem Satz**
-Der Privatkunde zahlt für die KI-Kosten, der Geschäftskunde dafür, dass er sich um nichts kümmern muss. Der Key ist bei beiden ein Detail.
-
-**Risiko und Gegenmassnahme**
-Nicht der Selbsthoster ist das Risiko, sondern ein Anbieter, der das Projekt günstiger hostet. AGPL macht das unattraktiv, weil er seine Änderungen offenlegen muss. Das CLA sichert das Recht, Geschäftskunden eine kommerzielle Lizenz zu geben.
-
-**Umsetzungsreihenfolge**
-Siehe `todo.md`. Kern: Der AI-Proxy aus auto-service wird geteilt, DMS baut Zählung, Limits und Stripe nicht neu.
+Geschäftsmodell, Preise, Zahlungsanbieter-Vergleich und Validierung liegen nicht in diesem öffentlichen Repo, sondern im privaten Repo `~/projects/business` (`dms/geschaeftsmodell.md`). Kurzfassung für den Code: Open Source unter AGPL, verkauft wird das Hosting. Es gibt einen kostenlosen Plan und bezahlte Pläne mit monatlichen Limits, durchgesetzt vom AI-Proxy. Bring-your-own-Key für Geschäftskunden läuft serverseitig über den Proxy.
 
 ## AI-Proxy (Entscheidung vom 06.09.2026)
 
@@ -38,29 +18,15 @@ Siehe `todo.md`. Kern: Der AI-Proxy aus auto-service wird geteilt, DMS baut Zäh
 - **Umgesetzt (06.09.2026):** ai-proxy v0.2.0 auf GitHub, auto-service nutzt es als npm-Paket, DMS als Edge Function `ai-proxy` mit gepinntem Import per Commit-Hash (`https://raw.githubusercontent.com/gstrainovic/ai-proxy/<sha von v0.2.0>/src/edge.ts`, Tags wären verschiebbar) und per-Function `deno.json` als Import-Map. Der Plan-Katalog ist pro App injizierbar (`createEdgeApp(env, { plans })`), Pipeline-Functions rufen den Proxy mit Service-Role + `x-user-id`.
 - **Proxy-Update in DMS:** neuen Tag in ai-proxy setzen, dann dessen Commit-Hash in `supabase/functions/ai-proxy/index.ts` (und ggf. `deno.json`) nachziehen, Edge Runtime neu starten.
 
-## Zahlungsanbieter (Entscheidung vom 06.09.2026)
+## Zahlungsanbieter (technisch)
 
-**Payrexx (Thun) statt Stripe**, für auto-service und dms. Grund: beste Preis-Leistung und Datenschutz.
-Geprüfte Preise (Preisseiten, 06.09.2026), online, CHF:
+Payrexx statt Stripe, Begründung und Preisvergleich im privaten Repo. Für die Umsetzung im Proxy relevant: TWINT-Abos über Tokenisierung, fehlgeschlagene Abbuchung wird einmal wiederholt (Status overdue → failed), Kundenportal per `POST /AuthToken` (Login-Link), Webhook als JSON mit `X-Webhook-Signature` (HMAC-SHA256, hex, über den Raw-Body), bis zu 10 Zustellversuche, Auth per `X-API-KEY`, Testmodus mit Testkarten. Die Abo-Endpunkte sind als «experimental documentation» markiert. Kein TS-SDK, nur PHP. Der Stripe-Code im Proxy bleibt als zweite Implementierung.
 
-| Anbieter | Monat | Karte CH | TWINT |
-|---|---|---|---|
-| Stripe | 0 | 2,9 % + 0.30 | 1,9 % + 0.30 |
-| Payrexx Standard | 19 (Startup −30 %) | 1,65 % + 0.18 | 1,25 % + 0.18 |
-| PostFinance E-Com Bundle | 19.90 | 1,55 % min. 0.20 + 0.18 | 1,3 % min. 0.20 + 0.18 |
-| wallee Basic | 19.95 | 1,55 % + 0.20 | 1,3 % + 0.20 |
+## Hosting (technisch)
 
-- Google Pay / Apple Pay kosten überall wie die hinterlegte Karte. Mollie ist für CH teurer (Schweizer Karten = Nicht-EWR, 3,25 %).
-- Break-even Payrexx gegen Stripe bei etwa 55 bis 80 zahlenden Abos, aber: Abos lassen sich nicht umziehen (Zahlungsmittel gehören dem Anbieter), deshalb von Anfang an Payrexx.
-- Payrexx-Fakten aus der Doku: TWINT-Abos ja (Tokenisierung), fehlgeschlagene Abbuchung wird einmal wiederholt (overdue → failed), Kundenportal per `POST /AuthToken` (Login-Link), Webhook JSON mit `X-Webhook-Signature` (HMAC-SHA256, hex, Raw-Body), bis zu 10 Zustellversuche, Auth per `X-API-KEY`, Testmodus mit Testkarten. Abo-Endpunkte sind als «experimental documentation» markiert. Kein TS-SDK, nur PHP.
-- Einzelunternehmen ohne Handelsregister ist bei Payrexx ausdrücklich möglich (Nachweis erst ab 100k CHF Umsatz).
-- Umsetzung erst, wenn das Konto freigegeben ist. Stripe-Code im Proxy bleibt (auto-service kann jederzeit zurück).
+Infomaniak VPS Lite in der Schweiz, Domain und Server im selben Konto, DNS per API. Kein GitHub Pages für Landing Pages, dessen Bedingungen schliessen Marketing für kommerzielle SaaS aus.
 
-## Hosting
-
-Infomaniak VPS Lite in der Schweiz statt Hetzner: 2 vCPU/4 GB 7.20 CHF, 4 vCPU/8 GB 18 CHF (Preisseite September 2026); Hetzner CPX22 kostet 23.79 EUR, die günstige CX-Linie ist nicht verfügbar. Domain und Server liegen im selben Infomaniak-Konto, DNS per API. Kein GitHub Pages für Landing Pages, dessen Bedingungen schliessen Marketing für kommerzielle SaaS aus.
-
-**Eigene VM pro Produkt.** auto-service (InstantDB, AI-Proxy als Node-Container, Caddy) und dms (Supabase-Stack mit AI-Proxy als Edge Function) teilen keinen Prozess; der Proxy läuft je App als eigene Instanz. Zwei VPS Lite mit 4 GB kosten 14.40 CHF, eine mit 8 GB 18 CHF, und getrennt reisst ein voller Supabase-Stack InstantDB nicht mit. dms bekommt seine VM erst nach der Validierung; Supabase dafür ohne Studio, Analytics und Log-Pipeline betreiben, dann reichen 4 GB.
+**Eigene VM pro Produkt.** auto-service (InstantDB, AI-Proxy als Node-Container, Caddy) und dms (Supabase-Stack mit AI-Proxy als Edge Function) teilen keinen Prozess; der Proxy läuft je App als eigene Instanz. Getrennt reisst ein voller Supabase-Stack InstantDB nicht mit. dms bekommt seine VM erst nach der Validierung; Supabase dafür ohne Studio, Analytics und Log-Pipeline betreiben, dann reichen 4 GB.
 
 ## Lizenz
 

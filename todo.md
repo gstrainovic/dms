@@ -1,6 +1,6 @@
 # Offene Punkte
 
-Ziel und Entscheidungen stehen in `AGENTS.md`. Reihenfolge, nicht Themen.
+Technische Entscheidungen stehen in `AGENTS.md`, Geschäftsmodell und Preise im privaten Repo `~/projects/business`. Reihenfolge, nicht Themen.
 
 ## Geparkt bis zum Entscheid bei auto-service
 
@@ -19,7 +19,7 @@ Zwei Produkte, null Kunden: Zuerst wird auto-service validiert (dort `business-p
 
 ## Zahlungsanbieter Payrexx, erst bei monatlicher Kartenzahlung
 
-Entscheid und geprüfte Preise in `AGENTS.md`. Die Anbindung entsteht im Repo ai-proxy und wird von auto-service mitgenutzt.
+Entscheid und geprüfte Preise im privaten Repo `~/projects/business`. Die Anbindung entsteht im Repo ai-proxy und wird von auto-service mitgenutzt.
 
 - [ ] DMS auf Payrexx umstellen (PAYREXX_INSTANCE, PAYREXX_API_SECRET, PAYREXX_WEBHOOK_SECRET), Checkout und Kündigung im Testmodus durchspielen
 - [ ] Datenschutzerklärung: Stripe durch Payrexx AG, Thun ersetzen
