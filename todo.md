@@ -13,7 +13,7 @@ Zwei Produkte, null Kunden: Zuerst wird auto-service validiert (dort `business-p
 
 ## Sobald ein Kunde Ja sagt: Betrieb
 
-- [ ] Hetzner: Frontend und selbst gehosteter Supabase-Stack neben auto-service (Docker Compose mit Caddy, mindestens 8 GB RAM für beide)
+- [ ] Infomaniak VPS (Schweiz): Frontend und selbst gehosteter Supabase-Stack neben auto-service auf demselben Server, dafür VPS Lite auf 4 vCPU / 8 GB heben (18 CHF/Monat); Docker Compose mit Caddy
 - [ ] Erste Kunden per Jahresrechnung mit QR-Rechnung, kein Zahlungsanbieter
 - [ ] Upload-Ansicht: Limit-Meldung aus `error_message` prominent zeigen (heute wie jeder andere Fehler)
 

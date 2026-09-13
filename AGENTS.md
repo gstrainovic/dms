@@ -56,6 +56,10 @@ Geprüfte Preise (Preisseiten, 06.09.2026), online, CHF:
 - Einzelunternehmen ohne Handelsregister ist bei Payrexx ausdrücklich möglich (Nachweis erst ab 100k CHF Umsatz).
 - Umsetzung erst, wenn das Konto freigegeben ist. Stripe-Code im Proxy bleibt (auto-service kann jederzeit zurück).
 
+## Hosting
+
+Infomaniak VPS Lite in der Schweiz statt Hetzner: 2 vCPU/4 GB 7.20 CHF, 4 vCPU/8 GB 18 CHF (Preisseite September 2026); Hetzner CPX22 kostet 23.79 EUR, die günstige CX-Linie ist nicht verfügbar. Domain und Server liegen im selben Infomaniak-Konto, DNS per API. Kein GitHub Pages für Landing Pages, dessen Bedingungen schliessen Marketing für kommerzielle SaaS aus. auto-service geht zuerst online; dms kommt auf denselben Server, sobald es validiert ist, dann auf 8 GB heben.
+
 ## Lizenz
 
 - AGPL-3.0-only für das gesamte Repo, `LICENSE` ist der offizielle Text von gnu.org.
