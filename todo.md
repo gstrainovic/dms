@@ -24,10 +24,20 @@ dms pinnt v0.2.0 (`cd0dee4`), ai-proxy ist 21 Commits weiter und hat keinen neue
 - [ ] In ai-proxy einen Tag setzen, Hash in `supabase/functions/ai-proxy/index.ts` nachziehen
 - [ ] Upgrade-Knopf in `BillingCard.vue` nur zeigen, wenn `/me/usage` `ordering` meldet (auto-service `bfcdd38`)
 
+## 2b. KI-Verarbeitung in der Schweiz prüfen
+
+dms-Dokumente (Steuern, Verträge, Gesundheit) sind heikler als Werkstattrechnungen. Mistral in Frankreich ist nach nDSG zulässig (EU in Anhang 1 DSV), widerspricht aber «alles in der Schweiz». Kandidat: Infomaniak AI Services (Server laufen schon dort, AVV im Manager, keine Grundgebühr, OpenAI-kompatibel): Chat Mistral Small 4, Embeddings Qwen3-Embedding-8B. Recherche vom 21.09.2026.
+
+- [ ] OCR-Vergleich mit 30–50 echten Dokumenten (schiefe Handyfotos, Steuerformulare mit Tabellen, Handschrift, Frankenbeträge): Mistral OCR gegen Infomaniak-Vision-Modell und kvant DeepSeek OCR. Messen: Zeichenfehler, Tabellen, Feld-Extraktion (Betrag, Datum, IBAN), Halluzinationen, Tokens und Laufzeit pro Seite
+- [ ] Anbieter im ai-proxy umschaltbar machen (betrifft auch auto-service)
+- [ ] Embeddings: andere Dimension als 1024, also Migration der pgvector-Spalte und Neuindexierung
+- [ ] Danach Datenschutz, AVV und Preisseite auf den tatsächlichen Verarbeitungsort anpassen
+
 ## 3. Rechtliches
 
 - [ ] AGB-Seite nach Vorbild auto-service `src/pages/AgbPage.vue` (`b48d25f`): Testzeit, Jahresabo, QR-Rechnung, Kündigung, Preisänderung, Haftung, dazu Aufbewahrung und Löschung der Dokumente. Preise aus `plans.ts` importieren statt abschreiben; in Footer und Bestelldialog verlinken
-- [ ] Auftragsverarbeitungsvertrag für Geschäftskunden (Treuhand, Arztpraxis verarbeiten Daten Dritter)
+- [ ] GeBüV: dms ist keine revisionssichere Aufbewahrung im Sinne der Geschäftsbücherverordnung, sondern eine Such- und Arbeitsablage daneben. In AGB (Leistung) und FAQ ausdrücklich so sagen, und nirgends mit «revisionssicher» oder «Archiv nach GeBüV» werben
+- [ ] Auftragsverarbeitungsvertrag für Geschäftskunden als öffentliche Seite `/avv`, gilt mit den AGB
 - [ ] Datenschutzerklärung nachziehen, sobald feststeht: Mail-Versand (Resend?), Abo- und Rechnungsdaten, Aufbewahrung der Server-Logs, Aufsichtsbehörde EDÖB, Mistral-Bezug zum AVV (Scale-Tier)
 - [ ] Cookie-Banner entfernen, es gibt nur technisch notwendige Speicherung (auto-service hat keinen); Datenschutz Abschnitt 6 und `acceptCookies` in den E2E-Fixtures anpassen
 
