@@ -17,7 +17,7 @@ const { results, query, loading, error, searchMode, filterType, hasResults, sear
 const searchInput = ref('')
 const modeOptions = [
   { label: 'Volltext', value: 'fulltext' },
-  { label: 'Hybrid (KI)', value: 'hybrid' },
+  { label: 'Nach Bedeutung', value: 'hybrid' },
 ]
 
 onMounted(() => {
@@ -141,7 +141,7 @@ function highlightExcerpt(text: string): string {
     <div v-else-if="!loading" class="text-center p-12 text-surface-400">
       <i class="pi pi-search text-5xl mb-4 block" />
       <p>Geben Sie einen Suchbegriff ein, um Ihre Dokumente zu durchsuchen.</p>
-      <p class="text-sm mt-2"><b>Volltext</b> sucht exakte Wörter in Titel und OCR-Text. <b>Hybrid (KI)</b> findet auch inhaltlich ähnliche Dokumente per KI-Embedding.</p>
+      <p class="text-sm mt-2"><b>Volltext</b> sucht exakte Wörter in Titel und OCR-Text. <b>Nach Bedeutung</b> findet auch Dokumente, die dasselbe mit anderen Worten sagen.</p>
     </div>
   </div>
 </template>

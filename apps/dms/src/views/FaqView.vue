@@ -14,12 +14,12 @@ const faqs = [
     answer: 'Aktuell unterstützen wir PNG, JPG und PDF. Weitere Formate sind in Planung.',
   },
   {
-    question: 'Wie funktioniert die OCR-Erkennung?',
+    question: 'Wie funktioniert die Texterkennung?',
     answer: 'Für PDFs mit eingebettetem Text verwenden wir eine lokale Extraktion. Bei gescannten Dokumenten und Bildern nutzen wir die Mistral OCR API, die auch handschriftlichen Text erkennt.',
   },
   {
-    question: 'Wie genau ist das Auto-Tagging?',
-    answer: 'Die KI-gestützte Klassifizierung erkennt gängige Dokumenttypen (Rechnungen, Verträge, Arztbriefe) sehr zuverlässig. Tags können jederzeit manuell korrigiert oder ergänzt werden.',
+    question: 'Wie zuverlässig ist die automatische Sortierung?',
+    answer: 'Die automatische Sortierung erkennt gängige Dokumenttypen (Rechnungen, Verträge, Arztbriefe) sehr zuverlässig. Tags können jederzeit manuell korrigiert oder ergänzt werden.',
   },
   {
     question: 'Sind meine Daten sicher?',

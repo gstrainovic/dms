@@ -30,9 +30,3 @@ Entscheid und geprüfte Preise im privaten Repo `~/projects/business`. Die Anbin
 - [ ] Key pro Organisation verschlüsselt im Store, Eingabe und Test in den Einstellungen
 - [ ] Proxy nutzt Organisations-Key statt Plattform-Key, Verbrauch zählt nicht gegen das Limit
 - [ ] Tests: Auflösung, Fallback, kein Key in Responses
-
-## Kleinkram, jederzeit
-
-- [ ] FAQ und Über-uns nennen noch «OCR-Erkennung» und «Auto-Tagging», an Features-Seite angleichen
-- [ ] Suchmodus-Umschalter in der App: «Hybrid (KI)» durch «Nach Bedeutung» ersetzen
-- [ ] GitHub, Branch Protection für `main`: Status-Check «CLA Check» als erforderlich markieren (fünf Minuten, manuell)

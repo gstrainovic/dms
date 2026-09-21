@@ -27,9 +27,9 @@ useHead({
 
       <h2 class="text-xl font-semibold text-surface-900 dark:text-surface-100 pt-4">Unser Ansatz</h2>
       <ul class="list-disc list-inside space-y-2">
-        <li>Automatische OCR-Erkennung statt manueller Texteingabe</li>
-        <li>KI-gestütztes Tagging statt manueller Kategorisierung</li>
-        <li>Semantische Suche statt starrer Schlüsselwörter</li>
+        <li>Automatische Texterkennung statt Abtippen</li>
+        <li>Automatische Sortierung statt manueller Kategorisierung</li>
+        <li>Suche nach Bedeutung statt starrer Schlüsselwörter</li>
         <li>Chat mit Dokumenten statt endlosem Scrollen</li>
       </ul>
 

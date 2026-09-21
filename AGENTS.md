@@ -35,7 +35,7 @@ Das OpenStack-Projekt existiert bereits (PCP-CTPZLR8, Region dc3-a, dort läuft 
 - AGPL-3.0-only für das gesamte Repo, `LICENSE` ist der offizielle Text von gnu.org.
 - Alle Abhängigkeiten sind permissiv (MIT, Apache 2.0, ISC, BSD) oder MPL 2.0 (nur lightningcss als Build-Tool). Kein GPL/AGPL im Baum, die Lizenzwahl war also frei.
 - CLA in `CLA.md`, Signaturen in `CLA_SIGNATURES.md`, Prüfung per `.github/workflows/cla.yml` mit actions/github-script v9. Das verbreitete contributor-assistant GitHub Action ist archiviert, cla-assistant.io speichert extern bei SAP/Azure, deshalb die eigene Lösung.
-- Auf GitHub muss der Status-Check «CLA Check» in der Branch Protection für `main` als erforderlich markiert werden, sonst blockt er nicht.
+- Die Branch Protection für `main` verlangt den Status-Check `cla` (Job-Name aus `cla.yml`, App GitHub Actions). Admins sind ausgenommen, direkte Pushes des Inhabers auf `main` gehen also weiter. Wer den Job umbenennt, muss den Check in der Branch Protection nachziehen, sonst wartet jeder PR auf einen Check, der nie kommt.
 - Der CLA-Text ist nicht juristisch geprüft. Vor dem ersten fremden Beitrag anwaltlich prüfen lassen, vor allem die Relizenzierungsklausel.
 
 ## Learnings
