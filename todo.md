@@ -12,6 +12,7 @@ Hängt an allem Weiteren: Testzeit im Proxy, DB-CHECK, AGB, Preisseite.
 - [ ] Jahrespreise und Zielgruppen (privat, Betrieb, Treuhand/Arztpraxis), Kontingente nur als Missbrauchsgrenze statt als Verkaufsargument (business `beobachtungen.md`)
 - [ ] Limits in `_shared/plans.ts` mit einem echten Lauf nachmessen, inklusive Embeddings (Vorgehen wie business `71edbf4`)
 - [ ] `plans.ts`, `PricingView.vue` und die Preisseiten-Versprechen («Prioritäts-Support», «Custom Schemas») angleichen
+- [ ] **Preisseite und Landing verkaufen Chat und Feld-Extraktion, nicht «Ablage».** Ablegen, Scannen und Stichwortsuche gibt es bei ePost seit April 2026 gratis und in der Schweiz. Der Preis (Vorschlag 79 CHF/Jahr privat, 600 CHF/Jahr pro Firma) rechtfertigt sich nur mit dem, was dort fehlt: Fragen an alle Dokumente mit Quellenangabe, automatisch ausgelesene Beträge, Daten und Fristen. Kein geprüfter Privatanbieter hat beides zusammen ohne eigenen KI-Schlüssel (Recherche 21.09.2026: Docutain, fileee, Papra, Evernote, Paperless-home, Copilot, Acrobat, Google)
 
 ## 2. ai-proxy auf den Stand von auto-service bringen
 
@@ -28,7 +29,12 @@ dms pinnt v0.2.0 (`cd0dee4`), ai-proxy ist 21 Commits weiter und hat keinen neue
 
 dms-Dokumente (Steuern, Verträge, Gesundheit) sind heikler als Werkstattrechnungen. Mistral in Frankreich ist nach nDSG zulässig (EU in Anhang 1 DSV), widerspricht aber «alles in der Schweiz». Kandidat: Infomaniak AI Services (Server laufen schon dort, AVV im Manager, keine Grundgebühr, OpenAI-kompatibel): Chat Mistral Small 4, Embeddings Qwen3-Embedding-8B. Recherche vom 21.09.2026.
 
-- [ ] OCR-Vergleich mit 30–50 echten Dokumenten (schiefe Handyfotos, Steuerformulare mit Tabellen, Handschrift, Frankenbeträge): Mistral OCR gegen Infomaniak-Vision-Modell und kvant DeepSeek OCR. Messen: Zeichenfehler, Tabellen, Feld-Extraktion (Betrag, Datum, IBAN), Halluzinationen, Tokens und Laufzeit pro Seite
+- [ ] **OCR-Test Mistral gegen alle Schweizer Optionen, bevor irgendetwas umgestellt wird.** In der Schweiz gibt es kein veröffentlichtes Gegenstück zu Mistral OCR, nur Vision-Modelle und DeepSeek OCR; die Qualität ist offen.
+  - Nur **gescannte und fotografierte** Dokumente testen. PDFs aus Word und Co. haben eingebetteten Text, den `process-ocr` schon lokal ausliest, ohne OCR
+  - Testsatz 30–50 echte Seiten: schiefe und unscharfe Handyfotos, Scans, Steuerformulare mit Tabellen, mehrspaltige Seiten, Kleingedrucktes, Handschrift, Umlaute, Frankenbeträge, IBAN und QR-Zahlteil
+  - Kandidaten: Mistral OCR (Referenz); Infomaniak AI Services, jedes Modell mit Bildeingabe (Mistral Small 4, Qwen3.5 u. a., welche Bilder annehmen, ist dort nicht dokumentiert); kvant/Phoeniqs DeepSeek OCR, Qwen3 VL 235B, Gemma 4, Llama 4, Apertus 1.5; Swisscom Swiss AI Platform, falls als Einzelfirma zugänglich; Exoscale Managed Inference, sobald verfügbar; selbst betriebene OCR-Modelle auf einer GPU-Instanz in der Schweiz als Kostenvergleich
+  - Messen: Zeichenfehlerrate gegen eine von Hand geprüfte Referenz, Tabellen und Struktur, Feld-Extraktion (Betrag, Datum, IBAN, Rechnungsnummer), erfundener Text, Tokens, Kosten und Laufzeit pro Seite, Grenzen pro Anfrage (mehrseitige Scans als Einzelbilder)
+  - Ergebnis mit Zahlen in `AGENTS.md` festhalten, Testsatz ohne Personendaten im Repo oder privat ablegen
 - [ ] Anbieter im ai-proxy umschaltbar machen (betrifft auch auto-service)
 - [ ] Embeddings: andere Dimension als 1024, also Migration der pgvector-Spalte und Neuindexierung
 - [ ] Danach Datenschutz, AVV und Preisseite auf den tatsächlichen Verarbeitungsort anpassen
@@ -54,6 +60,7 @@ dms-Dokumente (Steuern, Verträge, Gesundheit) sind heikler als Werkstattrechnun
 
 ## 5. App
 
+- [ ] Import aus ePost: ePost exportiert alle Dokumente als verschlüsselte ZIP-Datei, eine API gibt es nicht. Prüfen, was die ZIP enthält und wie sie verschlüsselt ist, dann ZIP-Upload mit Passwort. Allgemeiner und auch für ePost nutzbar: eine eigene Eingangs-Mailadresse pro Konto, an die man Dokumente weiterleitet
 - [ ] Zentrale Fehlermeldungen nach auto-service `src/lib/errors.ts` (`842d3d7`): 402, 429, Netz und Auth als deutsche Sätze; die Limit-Meldung im Upload prominent zeigen statt wie jeden anderen Fehler
 - [ ] Auffindbarkeit: `apps/dms/public/` mit `robots.txt` (KI-Crawler erlaubt), `sitemap.xml`, `llms.txt`, dazu JSON-LD in `index.html` (auto-service `d7cb755`)
 - [ ] Messung ohne Analytics-Dienst: Besucher aus dem Caddy-Log, Feld `source` an `documents` (Upload, Kamera, Drag & Drop) wie auto-service `e158cb5`
