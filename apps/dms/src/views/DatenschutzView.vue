@@ -54,7 +54,7 @@ useHead({
       <section>
         <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">5. Drittanbieter-Dienste</h2>
         <p>
-          Für OCR-Erkennung, Auto-Tagging, Embedding-Generierung und Chat-Antworten nutzen wir die
+          Für Texterkennung (OCR), automatische Sortierung, die Suche nach Bedeutung (Embeddings) und Antworten im Chat nutzen wir die
           <strong>Mistral AI API</strong> (Mistral AI, Paris, Frankreich). Dabei werden Dokumentinhalte
           an die Mistral-Server in der EU übermittelt. Mistral verarbeitet die Daten gemäss ihrer
           Datenschutzrichtlinie und nutzt sie nicht zu Trainingszwecken.
