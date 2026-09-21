@@ -12,7 +12,7 @@ test.describe('Legal-Seiten', () => {
     await expect(page.getByRole('heading', { name: 'Impressum' })).toBeVisible()
     await expect(page.getByText('Strainovic IT').first()).toBeVisible()
     await expect(page.getByText('Goran Strainovic').first()).toBeVisible()
-    await expect(page.getByText('Bahnstr. 9b')).toBeVisible()
+    await expect(page.getByText('Bahnstrasse 9b')).toBeVisible()
     await expect(page.getByText('9323 Steinach')).toBeVisible()
   })
 
@@ -25,7 +25,7 @@ test.describe('Legal-Seiten', () => {
 
   test('Impressum: Rechtsgrundlage und Sektionen', async ({ page }) => {
     await page.goto('/impressum')
-    await expect(page.getByText('Art. 3 UWG')).toBeVisible()
+    await expect(page.getByText('Art. 3 Abs. 1 lit. s UWG')).toBeVisible()
     await expect(page.getByText('Vertretungsberechtigte Person')).toBeVisible()
     await expect(page.getByText('Haftungsausschluss')).toBeVisible()
   })

@@ -15,11 +15,11 @@ useHead({
 
     <div class="space-y-6 text-surface-600 dark:text-surface-400">
       <section>
-        <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">Angaben gemäss Schweizer Recht (Art. 3 UWG)</h2>
+        <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">Angaben gemäss Schweizer Recht (Art. 3 Abs. 1 lit. s UWG)</h2>
         <p>
-          <strong class="text-surface-900 dark:text-surface-100">Strainovic IT</strong><br />
+          <strong class="text-surface-900 dark:text-surface-100">Strainovic IT</strong> (Einzelfirma)<br />
           Goran Strainovic<br />
-          Bahnstr. 9b<br />
+          Bahnstrasse 9b<br />
           9323 Steinach<br />
           Schweiz
         </p>

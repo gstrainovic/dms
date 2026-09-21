@@ -17,9 +17,9 @@ useHead({
       <section>
         <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">1. Verantwortlicher</h2>
         <p>
-          Strainovic IT<br />
+          Strainovic IT (Einzelfirma)<br />
           Goran Strainovic<br />
-          Bahnstr. 9b, 9323 Steinach, Schweiz<br />
+          Bahnstrasse 9b, 9323 Steinach, Schweiz<br />
           E-Mail: <a href="mailto:info@strainovic-it.ch" class="text-primary-500 hover:underline">info@strainovic-it.ch</a>
         </p>
       </section>
@@ -38,7 +38,7 @@ useHead({
         <ul class="list-disc list-inside space-y-1 mt-2">
           <li><strong>E-Mail-Adresse:</strong> Für Authentifizierung per OTP-Code (kein Passwort)</li>
           <li><strong>Hochgeladene Dokumente:</strong> Dateien, OCR-Text, extrahierte Metadaten und Tags</li>
-          <li><strong>Chat-Verläufe:</strong> Ihre Fragen und KI-Antworten (nur im Browser, nicht serverseitig gespeichert)</li>
+          <li><strong>Chat-Verläufe:</strong> Ihre Fragen und die Antworten der KI, in der Datenbank gespeichert, bis Sie den Chat löschen</li>
           <li><strong>Technische Daten:</strong> IP-Adresse, Browser-Typ (in Server-Logs)</li>
         </ul>
       </section>
@@ -46,8 +46,10 @@ useHead({
       <section>
         <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">4. Hosting &amp; Infrastruktur</h2>
         <p>
-          Unsere Anwendung nutzt <strong>Supabase</strong> als Backend-Plattform (PostgreSQL-Datenbank,
-          Dateispeicher, Authentifizierung). Supabase-Server befinden sich in der EU (AWS Frankfurt).
+          Datenbank, Dateispeicher und Anmeldung laufen auf einer selbst betriebenen
+          <strong>Supabase</strong>-Instanz (PostgreSQL). Der Server steht in der
+          <strong>Infomaniak Public Cloud in der Schweiz</strong> (Infomaniak Network SA, Genf).
+          Die Daten werden verschlüsselt übertragen (TLS).
         </p>
       </section>
 
@@ -105,7 +107,7 @@ useHead({
           Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf anzupassen.
           Die aktuelle Version ist stets auf dieser Seite verfügbar.
         </p>
-        <p class="mt-2 text-sm">Stand: Februar 2026</p>
+        <p class="mt-2 text-sm">Stand: September 2026</p>
       </section>
     </div>
   </div>
