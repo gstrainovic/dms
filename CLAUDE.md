@@ -119,11 +119,11 @@ apps/dms/                   — Vue 3 + PrimeVue Frontend
   src/lib/                  — supabase Client, database.types (auto-generated)
 packages/shared/            — AI-Pipeline, OCR, Retry, Image Utils, Queries
 supabase/
-  migrations/               — 3 SQL-Migrations (Schema, Storage, RLS)
-  functions/                — 7 Edge Functions (+ _shared/ für Plan-Katalog und Proxy-Client)
+  migrations/               — SQL-Migrations (Schema, Storage, RLS, ai-proxy, Organisationen)
+  functions/                — Edge Functions (+ _shared/ für Plan-Katalog und Proxy-Client)
 ```
 
-### Edge Functions (7 Stück)
+### Edge Functions
 1. `upload-document` — FormData Upload, SHA-256 Dedup, Storage, DB, triggers OCR
 2. `process-ocr` — lokale PDF-Extraktion (unpdf), sonst Mistral OCR via ai-proxy, triggers Extract
 3. `extract-data` — Dokumenttyp-Erkennung, Schema-Felder, Tags (Chat via ai-proxy), triggers Embed
@@ -131,10 +131,13 @@ supabase/
 5. `search` — Query-Embedding via ai-proxy + hybrid_search RPC
 6. `chat` — RAG: Query-Embedding → Context-Retrieval → Mistral Chat, alles via ai-proxy
 7. `ai-proxy` — Hono-App aus dem Repo gstrainovic/ai-proxy (gepinnter Tag): hält den Mistral-Key, zählt
-   Verbrauch pro Nutzer/Monat (`ai_usage`), setzt Plan-Limits durch (402), Stripe-Checkout/Portal/Webhook
+   Verbrauch pro Organisation/Monat (`ai_usage`), Testzeit, setzt Plan-Limits durch (402), Fair-Use-Bremse (429),
+   Stripe-Checkout/Portal/Webhook
+8. `invite-member` — Admin lädt per E-Mail ins Team ein (RPC `invite_member`, Einladungsmail über Supabase Auth)
 
 **Kein Function ruft Mistral direkt.** `_shared/ai-proxy.ts` bietet `aiFetchAsUser` (Nutzer-JWT durchreichen,
-chat/search) und `aiFetchAsService` (Service-Role + `x-user-id`, Pipeline). 402 = Monatslimit: Meldung landet
+chat/search) und `aiFetchAsService` (Service-Role + `x-user-id` = Organisation des Dokuments, Pipeline, wiederholt
+nach 429). 402 = Monatslimit: Meldung landet
 in `documents.error_message` bzw. als 402 beim Frontend (`lib/edge-errors.ts` liest sie aus dem Body).
 Plan-Katalog: `_shared/plans.ts` (Starter 100 Seiten / 500k Tokens, Pro 2000 / 10M), Preise auch in PricingView.
 
@@ -149,7 +152,9 @@ Alle Functions setzen `status: 'error'` + `error_message` im Fehlerfall.
 - `tags` + `document_tags` — Many-to-Many, source: 'ai'|'manual', confidence
 - `document_fields` — Key-Value extrahierte Felder, source: 'ai'|'manual'
 - `document_embeddings` — pgvector Chunks (1024-dim Mistral Embed)
-- `document_schemas` — Vordefinierte Schemas (Rechnung, Vertrag, Arztbrief)
+- `document_schemas` — Mitgelieferte Schemas (Rechnung, Vertrag, Arztbrief, `org_id` null) und eigene der Organisation
+- `organizations` + `organization_members` (Rolle admin|member) + `organization_invitations` — Besitzerin aller Daten, siehe AGENTS.md «Mehrbenutzer»
+- `restricted_document_types` — Typen nur für Admins; `audit_log` — Protokoll, nur Admins lesen
 
 ### Hybrid RAG-Suche
 - Volltext: PostgreSQL `tsvector` + `tsquery` (deutsch)
@@ -160,7 +165,7 @@ Alle Functions setzen `status: 'error'` + `error_message` im Fehlerfall.
 ### Abo & Nutzung (Frontend)
 - `lib/ai-proxy.ts` — fetchUsage/startCheckout/openPortal gegen `/functions/v1/ai-proxy`
 - `components/BillingCard.vue` — in den Einstellungen: Plan, Zähler mit Balken, Upgrade, Kundenportal
-- Tabellen `ai_usage`/`ai_subscriptions` werden nur vom Proxy geschrieben (Service-Role), Nutzer lesen eigene Zeilen
+- Tabellen `ai_usage`/`ai_subscriptions` werden nur vom Proxy geschrieben (Service-Role), Konto ist die Organisation, Mitglieder lesen ihre Zeilen
 
 ### Views (7 Stück)
 1. **Dashboard** — Stats (Gesamt/Bereit/Verarbeitung/Fehler), letzte Docs, Typ-Verteilung, Tags
@@ -169,7 +174,7 @@ Alle Functions setzen `status: 'error'` + `error_message` im Fehlerfall.
 4. **Upload** — Drag&Drop, Kamera, Multi-File, SHA-256 Dedup, Realtime Status-Tracking
 5. **Suche** — Volltext oder Hybrid(KI), Typ-Filter, Ergebnis-Highlighting, Relevanz-Score
 6. **Chat** — RAG-Chat mit Mistral Small, Quellen-Links, Nachrichtenverlauf
-7. **Einstellungen** — Schema-Editor (CRUD, JSON), Tag-Verwaltung
+7. **Einstellungen** — Team (Einladen, Rollen, Entfernen), Abo, Schema-Editor mit «Nur Admins», Tag-Verwaltung, Protokoll (Admins)
 
 ### Tests (112 Stück, alle grün)
 

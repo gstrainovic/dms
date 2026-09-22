@@ -13,12 +13,39 @@ import Dialog from 'primevue/dialog'
 import Chip from 'primevue/chip'
 import Select from 'primevue/select'
 import { useToast } from 'primevue/usetoast'
+import Checkbox from 'primevue/checkbox'
 import BillingCard from '@/components/BillingCard.vue'
+import TeamCard from '@/components/TeamCard.vue'
+import AuditCard from '@/components/AuditCard.vue'
+import { supabase } from '@/lib/supabase'
+import { useOrganization } from '@/composables/useOrganization'
 
 const schemasStore = useSchemasStore()
 const tagsStore = useTagsStore()
 const settingsStore = useSettingsStore()
 const toast = useToast()
+const { isAdmin, ensureLoaded, orgId } = useOrganization()
+
+// Dokumenttypen, die nur Admins sehen (Lohn, Personal ...); gilt für mitgelieferte und eigene Schemas
+const restrictedTypes = ref(new Set<string>())
+
+async function loadRestrictedTypes() {
+  const { data } = await supabase.from('restricted_document_types').select('document_type')
+  restrictedTypes.value = new Set((data ?? []).map((r) => r.document_type))
+}
+
+async function toggleRestricted(schema: Schema, restricted: boolean) {
+  const org = await orgId()
+  const { error } = restricted
+    ? await supabase.from('restricted_document_types').insert({ org_id: org, document_type: schema.document_type })
+    : await supabase.from('restricted_document_types').delete().eq('org_id', org).eq('document_type', schema.document_type)
+  if (error) {
+    toast.add({ severity: 'error', summary: 'Nicht gespeichert', detail: error.message, life: 3000 })
+  } else {
+    toast.add({ severity: 'success', summary: `${schema.name} ${restricted ? 'nur noch für Admins' : 'wieder für alle'}`, life: 2000 })
+  }
+  await loadRestrictedTypes()
+}
 
 const themeOptions = [
   { label: 'Dunkel', value: 'dark' },
@@ -36,7 +63,7 @@ const schemaForm = ref({
 })
 
 onMounted(async () => {
-  await Promise.all([schemasStore.fetchSchemas(), tagsStore.fetchTags()])
+  await Promise.all([schemasStore.fetchSchemas(), tagsStore.fetchTags(), loadRestrictedTypes(), ensureLoaded()])
 })
 
 function openNewSchema() {
@@ -134,7 +161,10 @@ function schemaFieldCount(schema: Schema): number {
       </template>
     </Card>
 
-    <!-- Abo & Nutzung (über ai-proxy) -->
+    <!-- Team und Rechte -->
+    <TeamCard />
+
+    <!-- Abo & Nutzung (über ai-proxy), gilt für die ganze Organisation -->
     <BillingCard />
 
     <!-- Dokumenten-Schemas -->
@@ -142,7 +172,7 @@ function schemaFieldCount(schema: Schema): number {
       <template #title>
         <div class="flex items-center justify-between">
           <span>Dokumenten-Schemas</span>
-          <Button label="Neues Schema" icon="pi pi-plus" size="small" @click="openNewSchema" />
+          <Button v-if="isAdmin" label="Neues Schema" icon="pi pi-plus" size="small" @click="openNewSchema" />
         </div>
       </template>
       <template #content>
@@ -153,17 +183,33 @@ function schemaFieldCount(schema: Schema): number {
             <template #body="{ data }">{{ schemaFieldCount(data) }}</template>
           </Column>
           <Column field="description" header="Beschreibung" />
-          <Column header="Aktionen" style="width: 120px">
+          <Column v-if="isAdmin" header="Nur Admins" style="width: 110px">
             <template #body="{ data }">
-              <div class="flex gap-1">
+              <Checkbox
+                :model-value="restrictedTypes.has(data.document_type)"
+                binary
+                :input-id="`restricted-${data.id}`"
+                :aria-label="'Nur Admins'"
+                @update:model-value="(value: boolean) => toggleRestricted(data, value)"
+              />
+            </template>
+          </Column>
+          <Column v-if="isAdmin" header="Aktionen" style="width: 120px">
+            <template #body="{ data }">
+              <!-- Mitgelieferte Schemas (ohne Organisation) sind für alle gleich und nicht änderbar -->
+              <div v-if="data.org_id" class="flex gap-1">
                 <Button icon="pi pi-pencil" text size="small" @click="openEditSchema(data)" />
                 <Button icon="pi pi-trash" text severity="danger" size="small" @click="deleteSchema(data)" />
               </div>
+              <span v-else class="text-sm text-surface-500">mitgeliefert</span>
             </template>
           </Column>
         </DataTable>
       </template>
     </Card>
+
+    <!-- Protokoll (nur Admins) -->
+    <AuditCard v-if="isAdmin" />
 
     <!-- Tags verwalten -->
     <Card>

@@ -72,11 +72,20 @@ Deno.serve(async (req: Request) => {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
 
+    // Dokumente gehören der Organisation: Duplikate und Speicherort pro Organisation
+    const { data: membership } = await supabase
+      .from('organization_members')
+      .select('org_id')
+      .eq('user_id', user.id)
+      .single()
+    if (!membership) throw new Error('Keine Organisation gefunden')
+    const orgId = membership.org_id
+
     const { data: existing } = await supabase
       .from('documents')
       .select('id')
       .eq('sha256', sha256)
-      .eq('user_id', user.id)
+      .eq('org_id', orgId)
       .maybeSingle()
 
     if (existing) {
@@ -87,7 +96,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Storage Upload
-    const storagePath = `documents/${sha256}/${file.name}`
+    const storagePath = `${orgId}/${sha256}/${file.name}`
     const { error: uploadError } = await supabase.storage
       .from('documents')
       .upload(storagePath, fileBuffer, {
@@ -97,7 +106,7 @@ Deno.serve(async (req: Request) => {
 
     if (uploadError) throw uploadError
 
-    // DB-Eintrag mit user_id
+    // DB-Eintrag: Organisation als Besitzerin, user_id als Urheber
     const { data: doc, error: dbError } = await supabase
       .from('documents')
       .insert({
@@ -108,6 +117,7 @@ Deno.serve(async (req: Request) => {
         sha256,
         status: 'uploaded',
         user_id: user.id,
+        org_id: orgId,
       })
       .select()
       .single()

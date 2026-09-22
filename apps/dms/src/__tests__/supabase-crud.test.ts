@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { ensureTestOwner } from './test-owner'
 
 const SUPABASE_URL = 'http://127.0.0.1:54321'
 const SERVICE_ROLE_KEY =
@@ -9,9 +10,11 @@ describe('Supabase CRUD', () => {
   let supabase: SupabaseClient
   let testDocId: string
   let testTagId: string
+  let ownerId: string
 
-  beforeAll(() => {
+  beforeAll(async () => {
     supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    ownerId = await ensureTestOwner(supabase, 'vitest-crud@test.local')
   })
 
   afterAll(async () => {
@@ -43,6 +46,7 @@ describe('Supabase CRUD', () => {
         storage_path: 'test/test.pdf',
         sha256: 'abc123def456' + Date.now(),
         status: 'uploaded',
+        user_id: ownerId,
       })
       .select()
       .single()
@@ -82,7 +86,7 @@ describe('Supabase CRUD', () => {
   it('erstellt einen Tag', async () => {
     const { data, error } = await supabase
       .from('tags')
-      .insert({ name: 'test-tag-' + Date.now(), color: '#ff0000' })
+      .insert({ name: 'test-tag-' + Date.now(), color: '#ff0000', user_id: ownerId })
       .select()
       .single()
 

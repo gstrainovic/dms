@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/composables/useAuth'
+import { useOrganization } from '@/composables/useOrganization'
 
 export interface UploadItem {
   id: string
@@ -13,6 +14,7 @@ export interface UploadItem {
 
 export function useUpload() {
   const { user } = useAuth()
+  const { orgId } = useOrganization()
   const items = ref<UploadItem[]>([])
   const uploading = ref(false)
 
@@ -92,8 +94,9 @@ export function useUpload() {
 
       item.progress = 30
 
-      // Storage Upload
-      const storagePath = `documents/${sha256}/${item.file.name}`
+      // Storage Upload in den Ordner der Organisation (Storage-Policy lässt nur diesen zu)
+      const org = await orgId()
+      const storagePath = `${org}/${sha256}/${item.file.name}`
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(storagePath, buffer, {
@@ -116,6 +119,7 @@ export function useUpload() {
           sha256,
           status: 'uploaded',
           user_id: user.value!.id,
+          org_id: org,
         })
         .select()
         .single()

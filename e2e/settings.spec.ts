@@ -1,13 +1,18 @@
 import { test, expect, getSupabase, seedDocuments, cleanupAll, loginAsTestUser } from './fixtures/test-fixtures'
 
 test.describe('Einstellungen', () => {
+  // Eigene Schemas sind pro Organisation eindeutig; ein Rest aus einem früheren Lauf liesse «Schema erstellen» scheitern
+  const removeTestSchema = () => getSupabase().from('document_schemas').delete().eq('document_type', 'e2e_test')
+
   test.beforeAll(async () => {
     const supabase = getSupabase()
     await cleanupAll(supabase)
+    await removeTestSchema()
     await seedDocuments(supabase)
   })
 
   test.afterAll(async () => {
+    await removeTestSchema()
     await cleanupAll(getSupabase())
   })
 
@@ -51,8 +56,9 @@ test.describe('Einstellungen', () => {
     await newSchemaBtn.click()
 
     // Dialog sollte erscheinen
-    await expect(page.getByText('Speichern')).toBeVisible()
-    await expect(page.getByText('Abbrechen')).toBeVisible()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByRole('button', { name: 'Speichern', exact: true })).toBeVisible()
+    await expect(dialog.getByRole('button', { name: 'Abbrechen' })).toBeVisible()
   })
 
   test('Schema erstellen', async ({ page }) => {
@@ -70,8 +76,8 @@ test.describe('Einstellungen', () => {
       // Beschreibung
       await inputs.nth(2).fill('Schema für E2E Tests')
 
-      await page.getByText('Speichern').click()
-      await page.waitForTimeout(500)
+      await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click()
+      await expect(page.getByText('Schema erstellt')).toBeVisible()
     }
   })
 
@@ -87,12 +93,12 @@ test.describe('Einstellungen', () => {
     // Warte auf Schema-Tabelle
     await page.waitForTimeout(500)
 
-    const editBtn = page.locator('.pi-pencil').first()
-    if (await editBtn.isVisible()) {
-      await editBtn.click()
-      await expect(page.getByText('Speichern')).toBeVisible()
-      await page.getByText('Abbrechen').click()
-    }
+    // Mitgelieferte Schemas sind nicht änderbar, das eigene aus «Schema erstellen» schon
+    await expect(page.getByRole('row').filter({ hasText: 'Rechnung' }).first()).toContainText('mitgeliefert')
+    await page.getByRole('row').filter({ hasText: 'E2E Test Schema' }).locator('.pi-pencil').click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByRole('button', { name: 'Speichern', exact: true })).toBeVisible()
+    await dialog.getByRole('button', { name: 'Abbrechen' }).click()
   })
 
   test('Tag entfernen', async ({ page }) => {

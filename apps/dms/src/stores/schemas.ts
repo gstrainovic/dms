@@ -7,6 +7,8 @@ export interface Schema {
   id: string
   name: string
   document_type: string
+  /** null = mitgeliefertes Schema, sonst eigenes der Organisation */
+  org_id: string | null
   description: string | null
   schema: Record<string, any>
   created_at: string

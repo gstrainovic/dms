@@ -2,7 +2,7 @@
 
 Technische Entscheidungen stehen in `AGENTS.md`, Geschäftsmodell und Preise im privaten Repo `~/projects/business` (`dms/geschaeftsmodell.md`). Sortiert nach Meilensteinen, innerhalb davon in der Reihenfolge, in der die Punkte voneinander abhängen.
 
-Entscheid vom 21./22.09.2026: dms wird produktivreif gemacht, noch vor zahlenden Kunden. Privat und Betrieb starten zusammen, der Go-live wartet also auf Mehrbenutzer. 30 Tage Testzeit, dann Privat 79 CHF im Jahr oder Betrieb 600 CHF im Jahr pro Firma für alle Mitarbeitenden, Jahresrechnung mit QR-Zahlteil, ohne Zahlungsanbieter. Vorbild für fast alles ist auto-service (`~/projects/auto-service`), dessen Commits die Punkte unten belegen.
+Entscheid vom 21./22.09.2026: dms wird produktivreif gemacht, noch vor zahlenden Kunden. Privat und Betrieb starten zusammen. 30 Tage Testzeit, dann Privat 79 CHF im Jahr oder Betrieb 600 CHF im Jahr pro Firma für alle Mitarbeitenden, Jahresrechnung mit QR-Zahlteil, ohne Zahlungsanbieter. Vorbild für fast alles ist auto-service (`~/projects/auto-service`), dessen Commits die Punkte unten belegen.
 
 ## 1. Offene Entscheide und Vorarbeiten
 
@@ -20,38 +20,18 @@ Davon hängt Späteres ab.
 
 ## 2. Bis zum Go-live
 
-### 2.1 ai-proxy auf den Stand von auto-service bringen
-
-dms pinnt v0.2.0 (`cd0dee4`), ai-proxy ist 21 Commits weiter und hat keinen neueren Tag. Ein Update ohne die Punkte hier bricht dms.
-
-- [ ] **Fehler bei jedem Update:** Migration `00007_ai_proxy.sql` erlaubt `status = 'trial'` nicht, und der `SupabaseStore` speichert `trialStartedAt` nicht. Ohne Anpassung endet jeder KI-Aufruf ohne Abo in 500
-- [ ] Jahresabo mit QR-Rechnung (`b77b713`, `invoice-subscription.ts`) im `SupabaseStore` unterstützen; heute nur im InstantStore von auto-service
-- [ ] `swissqrbill/` in `supabase/functions/ai-proxy/deno.json`, danach `deno check`
-- [ ] Fair-Use-Bremse: `burstLimit` im Edge-Einstieg aus `AI_PROXY_BURST_LIMIT` lesen (heute fest 20/min, ein Dokument braucht rund vier Aufrufe) und in `_shared/ai-proxy.ts` 429 mit `Retry-After` nachversuchen, sonst scheitern Mehrfach-Uploads
-- [ ] In ai-proxy einen Tag setzen, Hash in `supabase/functions/ai-proxy/index.ts` nachziehen
-
-### 2.2 Mehrbenutzer für Betriebe
-
-Ein gemeinsames Login für alle Mitarbeitenden ist bei einem DMS weder organisatorisch noch datenschutzrechtlich vertretbar (Zugriffskontrolle und Nachvollziehbarkeit nach nDSG/DSV); jedes Firmen-DMS hat eigene Benutzer mit Rechten. Mindestumfang:
-
-- [ ] Organisation als Besitzerin der Dokumente, Tags, Felder, Schemas und Chats; RLS über die Mitgliedschaft statt über `user_id`
-- [ ] Personen per E-Mail einladen und entfernen, Rollen mindestens Admin und Mitglied
-- [ ] Rechte pro Ordner oder Dokumenttyp (z. B. Lohn und Personal nur für Admins)
-- [ ] Suche, Chat und Embeddings liefern nur, was die Person sehen darf, auch in den Quellen der Chat-Antworten
-- [ ] Protokoll: wer hat was hochgeladen, geändert, gelöscht
-- [ ] Abo, Testzeit und Verbrauch im ai-proxy pro Organisation statt pro Person; Privatkonto als Organisation mit einer Person
-- [ ] Tests: Rechte zwischen zwei Mitgliedern und zwischen zwei Organisationen, Entfernen nimmt den Zugriff sofort
-
-### 2.3 Preismodell umsetzen
+### 2.1 Preismodell umsetzen
 
 - [ ] `_shared/plans.ts` auf die zwei Jahresstufen umstellen, Testzeit wie auto-service: 30 Tage ab erster KI-Nutzung, danach Lesen, Stichwortsuche und Export frei (ai-proxy `1692d26`)
 - [ ] Missbrauchsgrenzen in `plans.ts` mit einem echten Lauf nachmessen, inklusive Embeddings (Vorgehen wie business `71edbf4`)
 - [ ] `PricingView.vue` auf die Jahrespreise umbauen, Preise aus `plans.ts` statt fest im Template, Versprechen ohne Grundlage streichen («Prioritäts-Support», «Custom Schemas»)
+- [ ] ai-proxy ist in Plänen und Texten noch auf Wartungsheft zugeschnitten: `trialExpiredError` nennt «Wartungsheft» samt Fahrzeugpreisen, sobald der Katalog einen Plan `privat` hat; `orderSubscription`/`renewSubscription` rechnen über `vehicles` und `yearlyPriceChf`. Preis und Text pro Katalog injizierbar machen, bevor dms `privat`/`betrieb` einführt
+- [ ] Jahresrechnung in dms: der `SupabaseStore` speichert Rechnungs-Abos, aber `createEdgeApp` verdrahtet `invoicing` (PDF mit QR-Zahlteil, Versand über Resend) nicht; ohne das antworten `/billing/order`, `/cancel`, `/resume` mit 501. Dazu ein Verlängerungs-Job wie auto-service `scripts/renewals.ts` über `listInvoiceSubscriptions()`
 - [ ] Upgrade-Knopf in `BillingCard.vue` nur zeigen, wenn `/me/usage` `ordering` meldet (auto-service `bfcdd38`)
 - [ ] **Preisseite und Landing verkaufen Chat und Feld-Extraktion, nicht «Ablage».** Ablegen, Scannen und Stichwortsuche gibt es bei ePost seit April 2026 gratis und in der Schweiz. Der Preis rechtfertigt sich nur mit dem, was dort fehlt: Fragen an alle Dokumente mit Quellenangabe, automatisch ausgelesene Beträge, Daten und Fristen. Kein geprüfter Privatanbieter hat beides zusammen ohne eigenen KI-Schlüssel (Recherche 21.09.2026: Docutain, fileee, Papra, Evernote, Paperless-home, Copilot, Acrobat, Google). Für Betriebe zusätzlich: keine Buchhaltung oder ERP nötig, alle Mitarbeitenden im Preis
 - [ ] Bleibt es bei Mistral: auf Landing, Features, Preisseite und FAQ «KI aus Europa statt aus den USA» vermarkten (Daten und Server in der Schweiz, OCR und KI bei Mistral in Frankreich, kein Training mit Kundendaten, alle EU-Sprachen)
 
-### 2.4 Rechtliches
+### 2.2 Rechtliches
 
 - [ ] AGB-Seite nach Vorbild auto-service `src/pages/AgbPage.vue` (`b48d25f`): Testzeit, Jahresabo, QR-Rechnung, Kündigung, Preisänderung, Haftung, dazu Aufbewahrung und Löschung der Dokumente. Preise aus `plans.ts` importieren statt abschreiben; in Footer und Bestelldialog verlinken
 - [ ] GeBüV: dms ist keine revisionssichere Aufbewahrung im Sinne der Geschäftsbücherverordnung, sondern eine Such- und Arbeitsablage daneben. In AGB (Leistung) und FAQ ausdrücklich so sagen, und nirgends mit «revisionssicher» oder «Archiv nach GeBüV» werben
@@ -59,7 +39,7 @@ Ein gemeinsames Login für alle Mitarbeitenden ist bei einem DMS weder organisat
 - [ ] Datenschutzerklärung nachziehen: Mail-Versand über Resend, Organisationen und Mitglieder, Abo- und Rechnungsdaten, Aufbewahrung der Server-Logs, Aufsichtsbehörde EDÖB, tatsächlicher Verarbeitungsort von OCR und KI nach dem OCR-Test
 - [ ] Cookie-Banner entfernen, es gibt nur technisch notwendige Speicherung (auto-service hat keinen); Datenschutz Abschnitt 6 und `acceptCookies` in den E2E-Fixtures anpassen
 
-### 2.5 Betrieb
+### 2.3 Betrieb
 
 - [ ] Eigene Instanz in der Infomaniak Public Cloud (Schweiz, 2 vCPU / 4 GB) im selben OpenStack-Projekt wie auto-service: Frontend und selbst gehosteter Supabase-Stack ohne Studio, Analytics und Log-Pipeline
 - [ ] `deploy/` mit Docker Compose, Caddyfile (Assets unveränderlich cachen, `index.html` mit `max-age=0`, `www.`-Umleitung, Zugriffslog 30 Tage) und `deploy.sh` mit Health-Prüfung am Ende (auto-service `455fc2e`, `7959329`)

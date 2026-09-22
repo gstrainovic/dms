@@ -99,6 +99,18 @@ export interface SeedDocument {
   status: string
 }
 
+/** Organisation einer Person; jede Person gehört genau einer an */
+export async function orgOf(supabase: SupabaseClient, userId: string): Promise<string> {
+  const { data, error } = await supabase.from('organization_members').select('org_id').eq('user_id', userId).single()
+  if (error) throw new Error(`Organisation nicht gefunden: ${error.message}`)
+  return data.org_id
+}
+
+/** ID der E2E-Testperson (legt sie bei Bedarf an) */
+export function testUserId(supabase: SupabaseClient): Promise<string> {
+  return ensureTestUser(supabase)
+}
+
 /** Erstellt Test-Dokumente direkt in der DB (mit user_id) */
 export async function seedDocuments(supabase: SupabaseClient, userId?: string): Promise<SeedDocument[]> {
   // Falls keine userId, Test-User sicherstellen
@@ -177,17 +189,18 @@ export async function seedDocuments(supabase: SupabaseClient, userId?: string): 
     results.push(data as SeedDocument)
   }
 
-  // Tags erstellen (mit user_id)
+  // Tags erstellen: gehören der Organisation der Testperson (Trigger setzt org_id aus user_id)
   const tagNames = ['rechnung', 'strom', 'vertrag', 'miete', 'arztbrief', 'münchen']
   for (const name of tagNames) {
     await supabase.from('tags').upsert(
       { name, user_id: userId },
-      { onConflict: 'name,user_id' },
+      { onConflict: 'name,org_id' },
     )
   }
 
   // Tags zuweisen
-  const { data: allTags } = await supabase.from('tags').select('id, name').eq('user_id', userId)
+  const orgId = await orgOf(supabase, userId)
+  const { data: allTags } = await supabase.from('tags').select('id, name').eq('org_id', orgId)
   const tagMap = new Map((allTags ?? []).map((t: any) => [t.name, t.id]))
 
   const tagAssignments = [

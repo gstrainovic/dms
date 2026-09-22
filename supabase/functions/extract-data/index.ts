@@ -56,19 +56,23 @@ Deno.serve(async (req: Request) => {
 
     if (!doc || !doc.ocr_text) throw new Error('Kein OCR-Text vorhanden')
 
-    const userId = doc.user_id
+    // Konto im ai-proxy und Besitzerin von Tags und Schemas ist die Organisation
+    const orgId = doc.org_id
 
-    // Alle Schemas laden
-    const { data: schemas } = await supabase
+    // Mitgelieferte Schemas plus die eigenen der Organisation; ein eigenes geht bei gleichem Typ vor
+    const { data: allSchemas } = await supabase
       .from('document_schemas')
       .select('*')
+      .or(`org_id.is.null,org_id.eq.${orgId}`)
+    const schemas = (allSchemas ?? []).filter((s: any) =>
+      s.org_id || !(allSchemas ?? []).some((o: any) => o.org_id && o.document_type === s.document_type))
 
     const schemaList = (schemas ?? [])
       .map((s: any) => `- ${s.document_type}: ${s.description}`)
       .join('\n')
 
     // Schritt 1: Dokumenttyp erkennen
-    const typeResponse = await aiFetchAsService('/v1/chat/completions', userId, {
+    const typeResponse = await aiFetchAsService('/v1/chat/completions', orgId, {
         model: 'mistral-small-latest',
         response_format: { type: 'json_object' },
         messages: [
@@ -103,7 +107,7 @@ Antworte als JSON: {"document_type": "...", "title": "...", "tags": ["tag1", "ta
 
     if (matchingSchema) {
       const fieldNames = Object.keys(matchingSchema.schema.properties || {})
-      const extractResponse = await aiFetchAsService('/v1/chat/completions', userId, {
+      const extractResponse = await aiFetchAsService('/v1/chat/completions', orgId, {
           model: 'mistral-small-latest',
           response_format: { type: 'json_object' },
           messages: [
@@ -127,7 +131,7 @@ Gib nur die gefundenen Felder zurück. Nutze null für nicht gefundene Felder.`,
       }
     } else {
       // Dynamischer Fallback: Felder automatisch erkennen
-      const fallbackResponse = await aiFetchAsService('/v1/chat/completions', userId, {
+      const fallbackResponse = await aiFetchAsService('/v1/chat/completions', orgId, {
           model: 'mistral-small-latest',
           response_format: { type: 'json_object' },
           messages: [
@@ -168,11 +172,11 @@ Maximal 10 Felder. Nutze deutsche Feldnamen in snake_case.`,
         .from('tags')
         .select('id')
         .eq('name', tagName)
-        .eq('user_id', userId)
+        .eq('org_id', orgId)
         .maybeSingle()
 
       const tagId = existingTag?.id ?? (
-        await supabase.from('tags').insert({ name: tagName, user_id: userId }).select('id').single()
+        await supabase.from('tags').insert({ name: tagName, org_id: orgId, user_id: doc.user_id }).select('id').single()
       ).data?.id
 
       if (tagId) {

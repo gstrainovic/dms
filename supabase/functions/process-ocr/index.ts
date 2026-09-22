@@ -151,14 +151,14 @@ Deno.serve(async (req: Request) => {
       } else {
         // Fallback: Mistral OCR für gescannte PDFs
         console.log("Lokaler Text unzureichend, sende an Mistral OCR...");
-        const result = await callMistralOcr(buffer, doc.mime_type, doc.user_id);
+        const result = await callMistralOcr(buffer, doc.mime_type, doc.org_id);
         ocrText = result.text;
         pageCount = result.pageCount;
         ocrMethod = "mistral_ocr";
       }
     } else {
       // Bilder: immer Mistral OCR
-      const result = await callMistralOcr(buffer, doc.mime_type, doc.user_id);
+      const result = await callMistralOcr(buffer, doc.mime_type, doc.org_id);
       ocrText = result.text;
       pageCount = result.pageCount;
       ocrMethod = "mistral_ocr";
@@ -197,11 +197,11 @@ Deno.serve(async (req: Request) => {
   }
 });
 
-/** Mistral OCR über den ai-proxy aufrufen (zählt Seiten auf den Nutzer, setzt Limit durch) */
+/** Mistral OCR über den ai-proxy aufrufen (zählt Seiten auf die Organisation, setzt Limit durch) */
 async function callMistralOcr(
   buffer: ArrayBuffer,
   mimeType: string,
-  userId: string,
+  orgId: string,
 ): Promise<{ text: string; pageCount: number }> {
   const uint8 = new Uint8Array(buffer);
 
@@ -232,7 +232,7 @@ async function callMistralOcr(
         table_format: "markdown",
       };
 
-  const response = await aiFetchAsService("/v1/ocr", userId, ocrPayload);
+  const response = await aiFetchAsService("/v1/ocr", orgId, ocrPayload);
   const data = await aiJson(response, "Mistral OCR");
   const pages = processPages(data.pages || []);
 

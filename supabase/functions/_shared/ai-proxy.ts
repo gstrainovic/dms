@@ -8,6 +8,26 @@
  */
 const AI_PROXY_URL = `${Deno.env.get('SUPABASE_URL')}/functions/v1/ai-proxy`
 
+/** Längste Wartezeit nach 429; die Fair-Use-Bremse des Proxys zählt in Fenstern von einer Minute */
+const MAX_RETRY_WAIT_MS = 60_000
+
+/**
+ * Wiederholt eine Anfrage nach 429 (Fair-Use-Bremse des Proxys) und wartet dazwischen so lange, wie `Retry-After`
+ * sagt. Ohne das scheitert ein Mehrfach-Upload, weil jedes Dokument rund vier KI-Aufrufe braucht.
+ */
+export async function withRateLimitRetry(
+  doFetch: () => Promise<Response>,
+  { retries = 3, sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms)) }: { retries?: number, sleep?: (ms: number) => Promise<void> } = {},
+): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    const response = await doFetch()
+    if (response.status !== 429 || attempt >= retries) return response
+    await response.body?.cancel()
+    const seconds = Number(response.headers.get('Retry-After'))
+    await sleep(seconds > 0 ? Math.min(seconds * 1000, MAX_RETRY_WAIT_MS) : MAX_RETRY_WAIT_MS)
+  }
+}
+
 export class AiProxyError extends Error {
   constructor(message: string, public status: number) {
     super(message)
@@ -23,8 +43,9 @@ export function aiFetchAsUser(path: string, authHeader: string, body: unknown): 
   })
 }
 
+/** Pipeline ohne Nutzer-Session: wartet bei 429 und versucht erneut, weil niemand vor dem Bildschirm wartet */
 export function aiFetchAsService(path: string, userId: string, body: unknown): Promise<Response> {
-  return fetch(`${AI_PROXY_URL}${path}`, {
+  return withRateLimitRetry(() => fetch(`${AI_PROXY_URL}${path}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -32,7 +53,7 @@ export function aiFetchAsService(path: string, userId: string, body: unknown): P
       'x-user-id': userId,
     },
     body: JSON.stringify(body),
-  })
+  }))
 }
 
 /** Liest die Fehlermeldung im Mistral-/Proxy-Format aus einer Antwort. */

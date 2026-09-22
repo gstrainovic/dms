@@ -8,6 +8,13 @@ vi.mock("@/composables/useAuth", () => ({
   })
 }));
 
+// Mock useOrganization: neue Chats gehören der Organisation
+vi.mock("@/composables/useOrganization", () => ({
+  useOrganization: () => ({
+    orgId: async () => "test-org-id"
+  })
+}));
+
 // Mock supabase
 const mockSupabase = {
   from: vi.fn().mockReturnThis(),

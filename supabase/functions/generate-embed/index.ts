@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: doc } = await supabase
       .from('documents')
-      .select('id, ocr_text, user_id')
+      .select('id, ocr_text, org_id')
       .eq('id', documentId)
       .single()
 
@@ -57,7 +57,7 @@ Deno.serve(async (req: Request) => {
     const chunks = chunkText(doc.ocr_text)
 
     // Embeddings generieren (batch)
-    const response = await aiFetchAsService('/v1/embeddings', doc.user_id, { model: 'mistral-embed', input: chunks })
+    const response = await aiFetchAsService('/v1/embeddings', doc.org_id, { model: 'mistral-embed', input: chunks })
     const embedData = await aiJson(response, 'Mistral Embed')
 
     // Embeddings speichern (pgvector erwartet '[x,y,z,...]' String-Format)

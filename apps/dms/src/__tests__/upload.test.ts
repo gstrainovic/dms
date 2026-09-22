@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { ensureTestOwner } from './test-owner'
 
 const SUPABASE_URL = 'http://127.0.0.1:54321'
 const SERVICE_ROLE_KEY =
@@ -8,9 +9,11 @@ const SERVICE_ROLE_KEY =
 describe('Upload Pipeline', () => {
   let supabase: SupabaseClient
   const testDocIds: string[] = []
+  let ownerId: string
 
-  beforeAll(() => {
+  beforeAll(async () => {
     supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    ownerId = await ensureTestOwner(supabase, 'vitest-upload@test.local')
   })
 
   afterAll(async () => {
@@ -53,6 +56,7 @@ describe('Upload Pipeline', () => {
         storage_path: `documents/${sha256}/test-${now}.pdf`,
         sha256: sha256 + now, // Unique
         status: 'uploaded',
+        user_id: ownerId,
       })
       .select()
       .single()
@@ -75,6 +79,7 @@ describe('Upload Pipeline', () => {
         storage_path: `documents/${sha256}/original.pdf`,
         sha256,
         status: 'uploaded',
+        user_id: ownerId,
       })
       .select()
       .single()
@@ -104,6 +109,7 @@ describe('Upload Pipeline', () => {
         storage_path: `documents/${sha256}/pipeline.pdf`,
         sha256,
         status: 'uploaded',
+        user_id: ownerId,
       })
       .select()
       .single()
@@ -150,6 +156,7 @@ describe('Upload Pipeline', () => {
         status: 'ready',
         title: 'Testrechnung',
         ocr_text: ocrText,
+        user_id: ownerId,
       })
       .select()
       .single()
@@ -180,6 +187,7 @@ describe('Upload Pipeline', () => {
         storage_path: `documents/${sha256}/broken.pdf`,
         sha256,
         status: 'uploaded',
+        user_id: ownerId,
       })
       .select()
       .single()

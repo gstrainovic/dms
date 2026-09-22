@@ -62,6 +62,8 @@ function makeUniqueFixturePng(): Uint8Array {
 // Auth-Token für Edge Function Calls (wird in beforeAll gesetzt)
 let userAccessToken: string;
 let testUserId: string;
+// Konto im ai-proxy: Verbrauch und Limits zählen pro Organisation
+let testOrgId: string;
 
 async function callFunction(
   name: string,
@@ -138,6 +140,12 @@ describe("Edge Functions Integration", () => {
     });
     testUserId = verifyData.user!.id;
     userAccessToken = verifyData.session!.access_token;
+    const { data: member } = await createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+      .from("organization_members")
+      .select("org_id")
+      .eq("user_id", testUserId)
+      .single();
+    testOrgId = member!.org_id;
   });
 
   afterAll(async () => {
@@ -220,7 +228,8 @@ describe("Edge Functions Integration", () => {
       expect(doc).not.toBeNull();
       expect(doc!.mime_type).toBe("image/png");
       expect(doc!.sha256).toMatch(/^[0-9a-f]{64}$/);
-      expect(doc!.storage_path).toMatch(/^documents\/[0-9a-f]{64}\/.+/);
+      // Ablage im Ordner der Organisation: <org_id>/<sha256>/<Dateiname>
+      expect(doc!.storage_path).toMatch(new RegExp(`^${testOrgId}/[0-9a-f]{64}/.+`));
       expect(doc!.user_id).toBe(testUserId);
     }, 15000);
 
@@ -486,13 +495,13 @@ describe("Edge Functions Integration", () => {
     async function setUsage(ocrPages: number, chatTokens: number) {
       const { error } = await adminDb
         .from("ai_usage")
-        .upsert({ user_id: testUserId, month, ocr_pages: ocrPages, chat_tokens: chatTokens });
+        .upsert({ user_id: testOrgId, month, ocr_pages: ocrPages, chat_tokens: chatTokens });
       if (error) throw error;
     }
 
     afterAll(async () => {
       // Zähler des Testnutzers zurücksetzen, damit ein erneuter Lauf nicht am Limit startet
-      await adminDb.from("ai_usage").delete().eq("user_id", testUserId).eq("month", month);
+      await adminDb.from("ai_usage").delete().eq("user_id", testOrgId).eq("month", month);
     });
 
     it("hat OCR-Seiten und Tokens der vorherigen Pipeline-Läufe gezählt", async () => {

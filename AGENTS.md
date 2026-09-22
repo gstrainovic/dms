@@ -15,8 +15,21 @@ Geschäftsmodell, Preise, Zahlungsanbieter-Vergleich und Validierung liegen nich
 - **Hilfsfunktionen bleiben bewusst pro App:** `withRetry`, `resizeImage`, `hashImage`, `getModel`, `callMistralOcr` existieren in `packages/shared/` und in auto-service (`src/services/ai.ts`) getrennt und haben sich auseinanderentwickelt. Der Proxy muss identisch sein, weil er Verbrauch zählt und Limits durchsetzt; ein gemeinsames Utils-Paket würde beide Apps für rund 280 Zeilen koppeln. Es lohnt sich erst, wenn ein zweites geteiltes Modul in Proxy-Grösse dazukommt oder ein Bug an beiden Orten gefixt werden muss.
 - **Browser-BYOK (Key im Client direkt zu Mistral) wird entfernt.** BYOK für Geschäftskunden läuft server-seitig über den Proxy mit Key pro Organisation.
 - auto-service für sich braucht **keine** Supabase Edge Functions: Das hiesse den ganzen Supabase-Stack (~10 Container) neben InstantDB zu betreiben, nur für eine Funktion.
-- **Umgesetzt (06.09.2026):** ai-proxy v0.2.0 auf GitHub, auto-service nutzt es als npm-Paket, DMS als Edge Function `ai-proxy` mit gepinntem Import per Commit-Hash (`https://raw.githubusercontent.com/gstrainovic/ai-proxy/<sha von v0.2.0>/src/edge.ts`, Tags wären verschiebbar) und per-Function `deno.json` als Import-Map. Der Plan-Katalog ist pro App injizierbar (`createEdgeApp(env, { plans })`), Pipeline-Functions rufen den Proxy mit Service-Role + `x-user-id`.
+- **Umgesetzt (06.09.2026):** ai-proxy v0.2.0 auf GitHub, auto-service nutzt es als npm-Paket, DMS als Edge Function `ai-proxy` mit gepinntem Import per Commit-Hash (`https://raw.githubusercontent.com/gstrainovic/ai-proxy/<sha des Tags>/src/edge.ts`, derzeit v0.3.0, Tags wären verschiebbar) und per-Function `deno.json` als Import-Map. Der Plan-Katalog ist pro App injizierbar (`createEdgeApp(env, { plans })`), Pipeline-Functions rufen den Proxy mit Service-Role + `x-user-id`.
 - **Proxy-Update in DMS:** neuen Tag in ai-proxy setzen, dann dessen Commit-Hash in `supabase/functions/ai-proxy/index.ts` (und ggf. `deno.json`) nachziehen, Edge Runtime neu starten.
+
+## Mehrbenutzer (Organisationen)
+
+Migration `00009_organizations.sql`, Tests in `organizations.test.ts` und `e2e/team.spec.ts`.
+
+- **Die Organisation besitzt alles:** Dokumente, Tags, Felder, eigene Schemas und Chats hängen an `org_id`, RLS prüft die Mitgliedschaft (`is_org_member`, `is_org_admin`, `can_see_document`). `user_id` bleibt als Urheber; der Trigger `set_org_from_user` setzt beim Anlegen Urheber und Organisation.
+- **Eine Person gehört genau einer Organisation an.** Ein Privatkonto ist eine Organisation mit einer Person; jede neue Person bekommt es per Trigger `handle_new_user`, ausser eine Einladung wartet. Mehrere Organisationen pro Person hätten eine Auswahl der aktiven Organisation im UI und im Proxy verlangt.
+- **Einladen:** Edge Function `invite-member` ruft als Admin die RPC `invite_member`; ohne Konto verschickt Supabase Auth die Einladungsmail und der Trigger macht die Person zum Mitglied. Ein bestehendes Konto wechselt nur, wenn es leer ist, sonst bleibt die Einladung offen. Wer entfernt wird, bekommt ein neues leeres Privatkonto. Der letzte Admin lässt sich weder entfernen noch herabstufen.
+- **Rechte pro Dokumenttyp:** `restricted_document_types` sperrt Typen für Mitglieder (Einstellungen, Spalte «Nur Admins»). Wer ein Dokument hochgeladen hat, sieht es auch nach der Einstufung. `hybrid_search` filtert mit denselben Regeln, damit fliessen gesperrte Dokumente weder in Suchtreffer noch in Chat-Quellen.
+- **Storage:** Dateien liegen unter `<org_id>/<sha256>/<Dateiname>`. Lesen erlaubt die Policy nur mit sichtbarem Dokument, Hochladen nur in den eigenen Organisationsordner.
+- **Protokoll:** `audit_log` per Trigger für Dokumente, Tags, Felder und entfernte Mitglieder, lesbar nur für Admins. `user_id` null heisst automatische Verarbeitung (Pipeline).
+- **ai-proxy pro Organisation:** Konto im Proxy ist `organizations.id` (`accountOf` in `supabase/functions/ai-proxy/index.ts`), `ai_usage.user_id` und `ai_subscriptions.user_id` zeigen auf `organizations`. Pipeline-Functions geben `doc.org_id` direkt in `x-user-id` an.
+- **Schemas:** `org_id` null heisst mitgeliefert, für alle lesbar und nicht änderbar; eigene Schemas legen nur Admins an.
 
 ## Zahlungsanbieter (technisch)
 
@@ -42,6 +55,8 @@ Das OpenStack-Projekt existiert bereits (PCP-CTPZLR8, Region dc3-a, dort läuft 
 
 - **esm.sh-Imports in Edge Functions immer pinnen.** Ungepinntes `unpdf` lieferte still PDF.js 6, wo `PDFDocumentProxy.destroy()` entfernt wurde. Aufräumen läuft dort über `pdf.loadingTask.destroy()`. Dadurch scheiterte monatelang jede lokale PDF-Extraktion und alle PDFs gingen kostenpflichtig an Mistral OCR.
 - **Edge Runtime lädt Code und Secrets nicht nach.** Nach Änderungen an `supabase/functions/.env` oder an Function-Code hilft nur `docker restart supabase_edge_runtime_dms` (Code) bzw. `supabase stop && supabase start` (Secrets, weil sie als Container-Env gesetzt werden).
+- **Kein `deno.lock` in `supabase/functions/`.** Ein lokales `deno check` oder `deno test` ohne `--no-lock` schreibt Lockfile-Version 5, die Edge Runtime kann sie nicht lesen und die Function antwortet 503 («Unsupported lockfile version»).
+- **Fair-Use-Bremse lokal hochsetzen:** Alle Tests teilen ein Konto im Proxy; mit der Vorgabe von 20 Aufrufen pro Minute brechen sie mit 429 ab. Darum `AI_PROXY_BURST_LIMIT=1000` in der lokalen `.env`. Die Pipeline wartet bei 429 und versucht es erneut (`withRateLimitRetry`), Chat und Suche geben 429 an die Person weiter.
 - **Mistral OCR validiert Bilder streng.** Synthetische 1x1-PNGs mit Zufallsbytes zwischen den Chunks werden mit 400 abgelehnt. Tests nutzen echte Fixtures aus `e2e/fixtures/` und fügen für die SHA-256-Einzigartigkeit einen gültigen tEXt-Chunk ein.
 - **`supabase gen types` überschreibt handgepflegte Aliase** am Ende von `database.types.ts` (Document, Tag, DocumentField, ChatSession, ...). Nach dem Generieren wieder anhängen.
 - **Marketing-Texte** (Features, Landing, Preise) sind für Privatnutzer, Anwender und Entscheider geschrieben. Keine Technik-Begriffe (tsvector, pgvector, RAG, SHA-256). Der E2E-Test `marketing.spec.ts` prüft das.

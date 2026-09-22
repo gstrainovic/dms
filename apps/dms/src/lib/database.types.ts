@@ -36,33 +36,62 @@ export type Database = {
     Tables: {
       ai_subscriptions: {
         Row: {
+          audience: string | null
+          billing: string | null
+          billing_address: Json | null
+          cancel_at_period_end: boolean | null
           current_period_end: number | null
+          invoices: Json | null
           plan: string
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          trial_started_at: string | null
           updated_at: string
           user_id: string
+          vehicles: number | null
         }
         Insert: {
+          audience?: string | null
+          billing?: string | null
+          billing_address?: Json | null
+          cancel_at_period_end?: boolean | null
           current_period_end?: number | null
+          invoices?: Json | null
           plan?: string
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           user_id: string
+          vehicles?: number | null
         }
         Update: {
+          audience?: string | null
+          billing?: string | null
+          billing_address?: Json | null
+          cancel_at_period_end?: boolean | null
           current_period_end?: number | null
+          invoices?: Json | null
           plan?: string
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           user_id?: string
+          vehicles?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ai_subscriptions_account_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ai_usage: {
         Row: {
@@ -86,7 +115,53 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_account_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json
+          document_id: string | null
+          id: number
+          org_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json
+          document_id?: string | null
+          id?: never
+          org_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json
+          document_id?: string | null
+          id?: never
+          org_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_messages: {
         Row: {
@@ -127,6 +202,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          org_id: string
           title: string | null
           updated_at: string
           user_id: string
@@ -134,6 +210,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          org_id: string
           title?: string | null
           updated_at?: string
           user_id: string
@@ -141,11 +218,20 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          org_id?: string
           title?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       document_embeddings: {
         Row: {
@@ -230,6 +316,7 @@ export type Database = {
           document_type: string
           id: string
           name: string
+          org_id: string | null
           schema: Json
           updated_at: string
         }
@@ -239,6 +326,7 @@ export type Database = {
           document_type: string
           id?: string
           name: string
+          org_id?: string | null
           schema: Json
           updated_at?: string
         }
@@ -248,10 +336,19 @@ export type Database = {
           document_type?: string
           id?: string
           name?: string
+          org_id?: string | null
           schema?: Json
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "document_schemas_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       document_tags: {
         Row: {
@@ -304,6 +401,7 @@ export type Database = {
           ocr_method: string | null
           ocr_storage_path: string | null
           ocr_text: string | null
+          org_id: string
           original_filename: string
           page_count: number | null
           schema_id: string | null
@@ -325,6 +423,7 @@ export type Database = {
           ocr_method?: string | null
           ocr_storage_path?: string | null
           ocr_text?: string | null
+          org_id: string
           original_filename: string
           page_count?: number | null
           schema_id?: string | null
@@ -346,6 +445,7 @@ export type Database = {
           ocr_method?: string | null
           ocr_storage_path?: string | null
           ocr_text?: string | null
+          org_id?: string
           original_filename?: string
           page_count?: number | null
           schema_id?: string | null
@@ -358,10 +458,122 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "documents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "documents_schema_id_fkey"
             columns: ["schema_id"]
             isOneToOne: false
             referencedRelation: "document_schemas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          invited_by: string | null
+          org_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          invited_by?: string | null
+          org_id: string
+          role?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          invited_by?: string | null
+          org_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_invitations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string
+          org_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          org_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          org_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      restricted_document_types: {
+        Row: {
+          document_type: string
+          org_id: string
+        }
+        Insert: {
+          document_type: string
+          org_id: string
+        }
+        Update: {
+          document_type?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restricted_document_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -372,6 +584,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          org_id: string
           user_id: string | null
         }
         Insert: {
@@ -379,6 +592,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          org_id: string
           user_id?: string | null
         }
         Update: {
@@ -386,15 +600,25 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          org_id?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tags_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: { Args: never; Returns: string }
       ai_add_usage: {
         Args: {
           p_chat_tokens: number
@@ -416,6 +640,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      can_read_object: { Args: { p_name: string }; Returns: boolean }
+      can_see_document: {
+        Args: { p_org: string; p_owner: string; p_type: string }
+        Returns: boolean
+      }
+      current_org_id: { Args: never; Returns: string }
       hybrid_search: {
         Args: {
           filter_document_type?: string
@@ -435,6 +665,36 @@ export type Database = {
           tags: string[]
           title: string
         }[]
+      }
+      invite_member: {
+        Args: { p_email: string; p_role?: string }
+        Returns: string
+      }
+      is_org_admin: { Args: { p_org: string }; Returns: boolean }
+      is_org_member: { Args: { p_org: string }; Returns: boolean }
+      is_own_loose_object: { Args: { p_name: string }; Returns: boolean }
+      join_invited_org: {
+        Args: { p_email: string; p_user: string }
+        Returns: string
+      }
+      list_members: {
+        Args: never
+        Returns: {
+          email: string
+          joined_at: string
+          role: string
+          user_id: string
+        }[]
+      }
+      new_personal_org: {
+        Args: { p_email: string; p_user: string }
+        Returns: string
+      }
+      remove_member: { Args: { p_user_id: string }; Returns: undefined }
+      require_admin: { Args: never; Returns: string }
+      set_member_role: {
+        Args: { p_role: string; p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
@@ -582,3 +842,6 @@ export type DocumentSchema = Tables<'document_schemas'>
 export type DocumentStatus = Document['status']
 export type ChatSession = Tables<'chat_sessions'>
 export type ChatMessage = Tables<'chat_messages'>
+export type Organization = Tables<'organizations'>
+export type OrganizationRole = Tables<'organization_members'>['role']
+export type OrganizationInvitation = Tables<'organization_invitations'>

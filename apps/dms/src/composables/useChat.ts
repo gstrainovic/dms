@@ -2,6 +2,7 @@ import { ref, computed, watch } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { functionErrorMessage } from '@/lib/edge-errors'
 import { useAuth } from './useAuth'
+import { useOrganization } from './useOrganization'
 
 export interface ChatMessage {
   id: string
@@ -20,6 +21,7 @@ export interface ChatSource {
 
 export function useChat() {
   const { user } = useAuth()
+  const { orgId } = useOrganization()
   const messages = ref<ChatMessage[]>([])
   const currentSessionId = ref<string | null>(null)
   const loading = ref(false)
@@ -91,7 +93,7 @@ export function useChat() {
       if (!currentSessionId.value) {
         const { data: session, error: sErr } = await supabase
           .from('chat_sessions')
-          .insert({ user_id: user.value.id, title: content.slice(0, 50) })
+          .insert({ user_id: user.value.id, org_id: await orgId(), title: content.slice(0, 50) })
           .select()
           .single()
         
