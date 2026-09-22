@@ -4,16 +4,15 @@ Technische Entscheidungen stehen in `AGENTS.md`, Geschäftsmodell und Preise im 
 
 Entscheid vom 21.09.2026: auto-service ist fertig, dms wird jetzt produktivreif gemacht, noch vor zahlenden Kunden. Abgerechnet wird per Jahresrechnung mit QR-Zahlteil, ohne Zahlungsanbieter. Vorbild für fast alles ist auto-service (`~/projects/auto-service`), dessen Commits die Punkte unten belegen.
 
-## 1. Preismodell festlegen
+## 1. Preismodell umsetzen
 
-Hängt an allem Weiteren: Testzeit im Proxy, DB-CHECK, AGB, Preisseite.
+Entschieden (Kurzfassung in `AGENTS.md`, Begründung in business `dms/geschaeftsmodell.md`): 30 Tage Testzeit, dann Privat 79 CHF im Jahr oder Betrieb 600 CHF im Jahr pro Firma für alle Mitarbeitenden, Jahresrechnung mit QR-Zahlteil.
 
-- [ ] Testzeit statt dauerhaftem Gratisplan? Bei auto-service 30 Tage ab erster KI-Nutzung, danach nur Lesen und Export (ai-proxy `1692d26`)
-- [ ] Jahrespreise und Zielgruppen festlegen, Kontingente nur als Missbrauchsgrenze statt als Verkaufsargument (business `beobachtungen.md`). Wettbewerb und Vorschlag in business `dms/geschaeftsmodell.md`: Untergrenze für Betriebe ist DeepBox (Abacus) mit 19 CHF/Monat für 10 Nutzer plus 9 CHF für 50 KI-Analysen
-- [ ] Mehrbenutzer pro Firma (Nutzer einladen, gemeinsame Dokumente): DeepBox hat 10 Nutzer schon ab 19 CHF/Monat, ohne Mehrbenutzer lässt sich die Betriebsstufe kaum gegen Abacus-Kunden verkaufen
-- [ ] Limits in `_shared/plans.ts` mit einem echten Lauf nachmessen, inklusive Embeddings (Vorgehen wie business `71edbf4`)
-- [ ] `plans.ts`, `PricingView.vue` und die Preisseiten-Versprechen («Prioritäts-Support», «Custom Schemas») angleichen
-- [ ] **Preisseite und Landing verkaufen Chat und Feld-Extraktion, nicht «Ablage».** Ablegen, Scannen und Stichwortsuche gibt es bei ePost seit April 2026 gratis und in der Schweiz. Der Preis (Vorschlag 79 CHF/Jahr privat, 600 CHF/Jahr pro Firma) rechtfertigt sich nur mit dem, was dort fehlt: Fragen an alle Dokumente mit Quellenangabe, automatisch ausgelesene Beträge, Daten und Fristen. Kein geprüfter Privatanbieter hat beides zusammen ohne eigenen KI-Schlüssel (Recherche 21.09.2026: Docutain, fileee, Papra, Evernote, Paperless-home, Copilot, Acrobat, Google)
+- [ ] `_shared/plans.ts` auf die zwei Jahresstufen umstellen, Testzeit wie auto-service: 30 Tage ab erster KI-Nutzung, danach Lesen, Stichwortsuche und Export frei (ai-proxy `1692d26`)
+- [ ] Mehrbenutzer pro Firma (Nutzer einladen, gemeinsame Dokumente, alle Mitarbeitenden im Preis): Voraussetzung für die Betriebsstufe
+- [ ] Missbrauchsgrenzen in `plans.ts` mit einem echten Lauf nachmessen, inklusive Embeddings (Vorgehen wie business `71edbf4`)
+- [ ] `PricingView.vue` auf die Jahrespreise umbauen, Preise aus `plans.ts` statt fest im Template, Versprechen ohne Grundlage streichen («Prioritäts-Support», «Custom Schemas»)
+- [ ] **Preisseite und Landing verkaufen Chat und Feld-Extraktion, nicht «Ablage».** Ablegen, Scannen und Stichwortsuche gibt es bei ePost seit April 2026 gratis und in der Schweiz. Der Preis rechtfertigt sich nur mit dem, was dort fehlt. Für Betriebe zusätzlich: keine Buchhaltung oder ERP nötig, alle Mitarbeitenden im Preis: Fragen an alle Dokumente mit Quellenangabe, automatisch ausgelesene Beträge, Daten und Fristen. Kein geprüfter Privatanbieter hat beides zusammen ohne eigenen KI-Schlüssel (Recherche 21.09.2026: Docutain, fileee, Papra, Evernote, Paperless-home, Copilot, Acrobat, Google)
 
 ## 2. ai-proxy auf den Stand von auto-service bringen
 

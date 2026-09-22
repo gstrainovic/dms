@@ -2,7 +2,7 @@
 
 Technische Architektur, Pipeline und Befehle stehen in `CLAUDE.md`. Hier stehen technische Entscheidungen, Lizenz und Learnings, die sich nicht aus dem Code ableiten lassen.
 
-Geschäftsmodell, Preise, Zahlungsanbieter-Vergleich und Validierung liegen nicht in diesem öffentlichen Repo, sondern im privaten Repo `~/projects/business` (`dms/geschaeftsmodell.md`). Kurzfassung für den Code: Open Source unter AGPL, verkauft wird das Hosting. Es gibt einen kostenlosen Plan und bezahlte Pläne mit monatlichen Limits, durchgesetzt vom AI-Proxy. Bring-your-own-Key für Geschäftskunden läuft serverseitig über den Proxy.
+Geschäftsmodell, Preise, Zahlungsanbieter-Vergleich und Validierung liegen nicht in diesem öffentlichen Repo, sondern im privaten Repo `~/projects/business` (`dms/geschaeftsmodell.md`). Kurzfassung für den Code: Open Source unter AGPL, verkauft wird das Hosting. Kein Gratisplan, sondern 30 Tage Testzeit (Testzeit-Logik im AI-Proxy), danach zwei Jahresabos mit denselben Funktionen: **Privat** 79 CHF im Jahr für ein Konto, **Betrieb** 600 CHF im Jahr pro Firma für alle Mitarbeitenden. Abrechnung per Jahresrechnung mit QR-Zahlteil, ohne Zahlungsanbieter. Die Monatslimits im Plan-Katalog sind nur Missbrauchsgrenzen. Die Betriebsstufe setzt Mehrbenutzer pro Firma voraus und braucht beim Kunden keine Buchhaltung oder ERP. Preise stehen im Code in `supabase/functions/_shared/plans.ts`, die Preisseite und die AGB lesen sie von dort. Begründung und Wettbewerb in `~/projects/business/dms/geschaeftsmodell.md`. Bring-your-own-Key für Geschäftskunden läuft serverseitig über den Proxy.
 
 ## AI-Proxy (Entscheidung vom 06.09.2026)
 
@@ -26,7 +26,7 @@ Payrexx statt Stripe, Begründung und Preisvergleich im privaten Repo. Für die 
 
 Infomaniak Public Cloud (OpenStack) in der Schweiz, Domain und Server im selben Konto, Instanzen per OpenStack-CLI, DNS per Infomaniak-API, Snapshots vor riskanten Änderungen. Kein GitHub Pages für Landing Pages, dessen Bedingungen schliessen Marketing für kommerzielle SaaS aus.
 
-**Eigene VM pro Produkt.** auto-service (InstantDB, AI-Proxy als Node-Container, Caddy) und dms (Supabase-Stack mit AI-Proxy als Edge Function) teilen keinen Prozess; der Proxy läuft je App als eigene Instanz. Getrennt reisst ein voller Supabase-Stack InstantDB nicht mit. dms bekommt seine VM erst nach der Validierung; Supabase dafür ohne Studio, Analytics und Log-Pipeline betreiben, dann reichen 4 GB.
+**Eigene VM pro Produkt.** auto-service (InstantDB, AI-Proxy als Node-Container, Caddy) und dms (Supabase-Stack mit AI-Proxy als Edge Function) teilen keinen Prozess; der Proxy läuft je App als eigene Instanz. Getrennt reisst ein voller Supabase-Stack InstantDB nicht mit. dms bekommt seine VM mit dem Produktivbetrieb, noch vor zahlenden Kunden; Supabase dafür ohne Studio, Analytics und Log-Pipeline betreiben, dann reichen 4 GB.
 
 Das OpenStack-Projekt existiert bereits (PCP-CTPZLR8, Region dc3-a, dort läuft die Instanz `wartungsheft` des Produkts Wartungsheft, Repo `~/projects/wartungsheft`, auf GitHub `auto-service`). Zugang vom Laptop: `openstack --os-cloud PCP-CTPZLR8-dc3-a …` mit Application Credential in `~/.config/openstack/clouds.yaml`, DNS-API-Token (nur `dns:write`, Prüfen per `dig`) in `~/.config/infomaniak/token`. Die dms-Instanz kommt als zweiter Server ins selbe Projekt; Vorgehen und Stolpersteine (Security Group, MinIO nur noch auf quay.io, ein Caddy pro Instanz, DKIM bei Infomaniak nur als Typ «DKIM» im Manager) stehen in `~/projects/wartungsheft/README.md` und `CLAUDE.md` unter «Produktion».
 
