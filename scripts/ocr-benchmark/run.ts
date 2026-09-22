@@ -29,15 +29,16 @@ export interface ModelSpec {
 export const MODELS: ModelSpec[] = [
   { id: 'mistral-ocr', label: 'Mistral OCR 4.1 (Referenz)', api: 'mistral-ocr', model: 'mistral-ocr-latest' },
   { id: 'mistral-ocr-3', label: 'Mistral OCR 3 (halber Preis)', api: 'mistral-ocr', model: 'mistral-ocr-2512' },
-  { id: 'mistral-small', label: 'Mistral Small 4 (Infomaniak)', api: 'mistral-chat', model: 'mistral-small-latest' },
-  { id: 'ministral-14b', label: 'Ministral 3 14B (Infomaniak)', api: 'mistral-chat', model: 'ministral-14b-2512' },
-  { id: 'qwen3-vl-235b', label: 'Qwen3-VL 235B (kvant)', api: 'openrouter', model: 'qwen/qwen3-vl-235b-a22b-instruct' },
-  { id: 'qwen3-vl-32b', label: 'Qwen3-VL 32B (selbst betrieben)', api: 'openrouter', model: 'qwen/qwen3-vl-32b-instruct' },
-  { id: 'qwen3-vl-8b', label: 'Qwen3-VL 8B (selbst betrieben, kleine GPU)', api: 'openrouter', model: 'qwen/qwen3-vl-8b-instruct' },
-  { id: 'qwen3.5-122b', label: 'Qwen3.5 122B (Infomaniak)', api: 'openrouter', model: 'qwen/qwen3.5-122b-a10b' },
-  { id: 'gemma-4-31b', label: 'Gemma 4 31B (kvant)', api: 'openrouter', model: 'google/gemma-4-31b-it' },
-  { id: 'llama-4-maverick', label: 'Llama 4 Maverick (kvant)', api: 'openrouter', model: 'meta-llama/llama-4-maverick' },
-  { id: 'llama-4-scout', label: 'Llama 4 Scout (kvant)', api: 'openrouter', model: 'meta-llama/llama-4-scout' },
+  // Label: Modell, Schweizer Anbieter, bei dem es im Angebot ist, und wo es für die Messung tatsächlich lief
+  { id: 'mistral-small', label: 'Mistral Small 4 (Angebot Infomaniak, gemessen bei Mistral)', api: 'mistral-chat', model: 'mistral-small-latest' },
+  { id: 'ministral-14b', label: 'Ministral 3 14B (Angebot Infomaniak, gemessen bei Mistral)', api: 'mistral-chat', model: 'ministral-14b-2512' },
+  { id: 'qwen3-vl-235b', label: 'Qwen3-VL 235B (Angebot kvant, gemessen über OpenRouter)', api: 'openrouter', model: 'qwen/qwen3-vl-235b-a22b-instruct' },
+  { id: 'qwen3-vl-32b', label: 'Qwen3-VL 32B (selbst betreibbar, gemessen über OpenRouter)', api: 'openrouter', model: 'qwen/qwen3-vl-32b-instruct' },
+  { id: 'qwen3-vl-8b', label: 'Qwen3-VL 8B (selbst betreibbar, gemessen über OpenRouter)', api: 'openrouter', model: 'qwen/qwen3-vl-8b-instruct' },
+  { id: 'qwen3.5-122b', label: 'Qwen3.5 122B (Angebot Infomaniak, gemessen über OpenRouter)', api: 'openrouter', model: 'qwen/qwen3.5-122b-a10b' },
+  { id: 'gemma-4-31b', label: 'Gemma 4 31B (Angebot kvant, gemessen über OpenRouter)', api: 'openrouter', model: 'google/gemma-4-31b-it' },
+  { id: 'llama-4-maverick', label: 'Llama 4 Maverick (Angebot kvant, gemessen über OpenRouter)', api: 'openrouter', model: 'meta-llama/llama-4-maverick' },
+  { id: 'llama-4-scout', label: 'Llama 4 Scout (Angebot kvant, gemessen über OpenRouter)', api: 'openrouter', model: 'meta-llama/llama-4-scout' },
 ]
 
 const PROMPT = `Transkribiere den gesamten Text dieses Dokuments exakt als Markdown.
