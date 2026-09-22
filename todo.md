@@ -9,7 +9,8 @@ Entscheid vom 21.09.2026: auto-service ist fertig, dms wird jetzt produktivreif 
 Hängt an allem Weiteren: Testzeit im Proxy, DB-CHECK, AGB, Preisseite.
 
 - [ ] Testzeit statt dauerhaftem Gratisplan? Bei auto-service 30 Tage ab erster KI-Nutzung, danach nur Lesen und Export (ai-proxy `1692d26`)
-- [ ] Jahrespreise und Zielgruppen (privat, Betrieb, Treuhand/Arztpraxis), Kontingente nur als Missbrauchsgrenze statt als Verkaufsargument (business `beobachtungen.md`)
+- [ ] Jahrespreise und Zielgruppen festlegen, Kontingente nur als Missbrauchsgrenze statt als Verkaufsargument (business `beobachtungen.md`). Wettbewerb und Vorschlag in business `dms/geschaeftsmodell.md`: Untergrenze für Betriebe ist DeepBox (Abacus) mit 19 CHF/Monat für 10 Nutzer plus 9 CHF für 50 KI-Analysen
+- [ ] Mehrbenutzer pro Firma (Nutzer einladen, gemeinsame Dokumente): DeepBox hat 10 Nutzer schon ab 19 CHF/Monat, ohne Mehrbenutzer lässt sich die Betriebsstufe kaum gegen Abacus-Kunden verkaufen
 - [ ] Limits in `_shared/plans.ts` mit einem echten Lauf nachmessen, inklusive Embeddings (Vorgehen wie business `71edbf4`)
 - [ ] `plans.ts`, `PricingView.vue` und die Preisseiten-Versprechen («Prioritäts-Support», «Custom Schemas») angleichen
 - [ ] **Preisseite und Landing verkaufen Chat und Feld-Extraktion, nicht «Ablage».** Ablegen, Scannen und Stichwortsuche gibt es bei ePost seit April 2026 gratis und in der Schweiz. Der Preis (Vorschlag 79 CHF/Jahr privat, 600 CHF/Jahr pro Firma) rechtfertigt sich nur mit dem, was dort fehlt: Fragen an alle Dokumente mit Quellenangabe, automatisch ausgelesene Beträge, Daten und Fristen. Kein geprüfter Privatanbieter hat beides zusammen ohne eigenen KI-Schlüssel (Recherche 21.09.2026: Docutain, fileee, Papra, Evernote, Paperless-home, Copilot, Acrobat, Google)
@@ -37,6 +38,7 @@ dms-Dokumente (Steuern, Verträge, Gesundheit) sind heikler als Werkstattrechnun
   - Ergebnis mit Zahlen in `AGENTS.md` festhalten, Testsatz ohne Personendaten im Repo oder privat ablegen
 - [ ] Anbieter im ai-proxy umschaltbar machen (betrifft auch auto-service)
 - [ ] Embeddings: andere Dimension als 1024, also Migration der pgvector-Spalte und Neuindexierung
+- [ ] **Qualität vor Standort:** Ist die Schweizer OCR schlechter als Mistral, bleibt es bei Mistral. Dann auf Landing, Features, Preisseite und FAQ «KI aus Europa statt aus den USA» vermarkten: Daten und Server in der Schweiz, OCR und KI bei Mistral in Frankreich, kein Training mit Kundendaten, alle EU-Sprachen. Strategie in business `dms/geschaeftsmodell.md`
 - [ ] Danach Datenschutz, AVV und Preisseite auf den tatsächlichen Verarbeitungsort anpassen
 
 ## 3. Rechtliches
@@ -60,7 +62,8 @@ dms-Dokumente (Steuern, Verträge, Gesundheit) sind heikler als Werkstattrechnun
 
 ## 5. App
 
-- [ ] Import aus ePost: ePost exportiert alle Dokumente als verschlüsselte ZIP-Datei, eine API gibt es nicht. Prüfen, was die ZIP enthält und wie sie verschlüsselt ist, dann ZIP-Upload mit Passwort. Allgemeiner und auch für ePost nutzbar: eine eigene Eingangs-Mailadresse pro Konto, an die man Dokumente weiterleitet
+- [ ] **Eigene Eingangs-Mailadresse für jedes Konto** (Domain noch festzulegen, z. B. `<kennung>@eingang.<dms-domain>`): Anhänge von weitergeleiteten oder direkt zugestellten Mails landen als Dokumente in der Pipeline. Nutzen: Rechnungen per Mail, Weiterleiten aus ePost, Scanner mit Mailversand. Offen: Empfang (Resend Inbound, Infomaniak-Mail oder eigener MX), Schutz gegen Spam und fremde Absender, Grenzen für Grösse und Anzahl, Hinweis in Datenschutz und AGB
+- [ ] Import aus ePost: ePost exportiert alle Dokumente als verschlüsselte ZIP-Datei, eine API gibt es nicht. Prüfen, was die ZIP enthält und wie sie verschlüsselt ist, dann ZIP-Upload mit Passwort
 - [ ] Zentrale Fehlermeldungen nach auto-service `src/lib/errors.ts` (`842d3d7`): 402, 429, Netz und Auth als deutsche Sätze; die Limit-Meldung im Upload prominent zeigen statt wie jeden anderen Fehler
 - [ ] Auffindbarkeit: `apps/dms/public/` mit `robots.txt` (KI-Crawler erlaubt), `sitemap.xml`, `llms.txt`, dazu JSON-LD in `index.html` (auto-service `d7cb755`)
 - [ ] Messung ohne Analytics-Dienst: Besucher aus dem Caddy-Log, Feld `source` an `documents` (Upload, Kamera, Drag & Drop) wie auto-service `e158cb5`
