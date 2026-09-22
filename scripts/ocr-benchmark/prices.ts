@@ -25,4 +25,12 @@ export const PRICES: Record<string, Price> = {
   'gemma-4-31b': { inputChfPerM: 0.118, outputChfPerM: 0.325 },   // kvant Gemma 4 31B
   'llama-4-maverick': { inputChfPerM: 0.2693, outputChfPerM: 1.0773 }, // kvant
   'llama-4-scout': { inputChfPerM: 0.1924, outputChfPerM: 0.6387 },    // kvant
+  // Direkt bei Infomaniak gemessen: Tokens pro Seite sind hier die des Schweizer Hosts
+  'ik-ministral-14b': { inputChfPerM: 0.30, outputChfPerM: 0.40 },
+  'ik-mistral-small': { inputChfPerM: 0.20, outputChfPerM: 0.75 },
+  'ik-gemma-4-31b': { inputChfPerM: 0.20, outputChfPerM: 0.40 },
+  'ik-qwen3.5-122b': { inputChfPerM: 0.40, outputChfPerM: 3.20 },
+  'ik-qwen3.5-397b': { inputChfPerM: 0.80, outputChfPerM: 3.60 },
+  'ik-kimi-k2.6': { inputChfPerM: 0.60, outputChfPerM: 3.00 },
+  'ik-apertus-70b': { inputChfPerM: 0.70, outputChfPerM: 2.50 },
 }

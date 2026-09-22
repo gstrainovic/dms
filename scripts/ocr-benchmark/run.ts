@@ -22,9 +22,13 @@ export interface ModelSpec {
   id: string
   /** Wie das Modell bei den Schweizer Anbietern heisst bzw. wofür es steht */
   label: string
-  api: 'mistral-ocr' | 'mistral-chat' | 'openrouter'
+  api: 'mistral-ocr' | 'mistral-chat' | 'openrouter' | 'infomaniak'
   model: string
+  /** Zusätzliche Request-Felder, z. B. «Denken» abschalten: sonst verbraucht es das ganze Antwortlimit und der Text bleibt leer */
+  extra?: Record<string, unknown>
 }
+
+const NO_THINKING_QWEN = { chat_template_kwargs: { enable_thinking: false } }
 
 export const MODELS: ModelSpec[] = [
   { id: 'mistral-ocr', label: 'Mistral OCR 4.1 (Referenz)', api: 'mistral-ocr', model: 'mistral-ocr-latest' },
@@ -39,6 +43,14 @@ export const MODELS: ModelSpec[] = [
   { id: 'gemma-4-31b', label: 'Gemma 4 31B (Angebot kvant, gemessen über OpenRouter)', api: 'openrouter', model: 'google/gemma-4-31b-it' },
   { id: 'llama-4-maverick', label: 'Llama 4 Maverick (Angebot kvant, gemessen über OpenRouter)', api: 'openrouter', model: 'meta-llama/llama-4-maverick' },
   { id: 'llama-4-scout', label: 'Llama 4 Scout (Angebot kvant, gemessen über OpenRouter)', api: 'openrouter', model: 'meta-llama/llama-4-scout' },
+  // Direkt bei Infomaniak AI Services (Schweiz), Produkt-ID in INFOMANIAK_AI_PRODUCT
+  { id: 'ik-ministral-14b', label: 'Ministral 3 14B (Infomaniak)', api: 'infomaniak', model: 'mistralai/Ministral-3-14B-Instruct-2512' },
+  { id: 'ik-mistral-small', label: 'Mistral Small 4 (Infomaniak)', api: 'infomaniak', model: 'mistralai/Mistral-Small-4-119B-2603' },
+  { id: 'ik-gemma-4-31b', label: 'Gemma 4 31B (Infomaniak)', api: 'infomaniak', model: 'google/gemma-4-31B-it' },
+  { id: 'ik-qwen3.5-122b', label: 'Qwen3.5 122B (Infomaniak)', api: 'infomaniak', model: 'Qwen/Qwen3.5-122B-A10B-FP8', extra: NO_THINKING_QWEN },
+  { id: 'ik-qwen3.5-397b', label: 'Qwen3.5 397B (Infomaniak)', api: 'infomaniak', model: 'Qwen/Qwen3.5-397B-A17B-FP8', extra: NO_THINKING_QWEN },
+  { id: 'ik-kimi-k2.6', label: 'Kimi K2.6 (Infomaniak)', api: 'infomaniak', model: 'moonshotai/Kimi-K2.6', extra: { chat_template_kwargs: { thinking: false } } },
+  { id: 'ik-apertus-70b', label: 'Apertus 1.5 70B (Infomaniak)', api: 'infomaniak', model: 'swiss-ai/Apertus-v1.5-70B' },
 ]
 
 const PROMPT = `Transkribiere den gesamten Text dieses Dokuments exakt als Markdown.
@@ -134,8 +146,10 @@ async function runOne(spec: ModelSpec, image: string): Promise<Omit<RunResult, '
   const messages = [{ role: 'user', content: [{ type: 'text', text: PROMPT }, { type: 'image_url', image_url: { url: image_url } }] }]
   const [url, key, extra] = spec.api === 'mistral-chat'
     ? ['https://api.mistral.ai/v1/chat/completions', process.env.MISTRAL_API_KEY!, {}]
-    : ['https://openrouter.ai/api/v1/chat/completions', process.env.OPENROUTER_API_KEY!, { usage: { include: true } }]
-  const data = await postJson(url, key, { model: spec.model, messages, temperature: 0, max_tokens: 4096, ...extra })
+    : spec.api === 'infomaniak'
+      ? [`https://api.infomaniak.com/2/ai/${process.env.INFOMANIAK_AI_PRODUCT}/openai/v1/chat/completions`, process.env.INFOMANIAK_AI_TOKEN!, {}]
+      : ['https://openrouter.ai/api/v1/chat/completions', process.env.OPENROUTER_API_KEY!, { usage: { include: true } }]
+  const data = await postJson(url, key, { model: spec.model, messages, temperature: 0, max_tokens: 4096, ...extra, ...spec.extra })
   return {
     text: data.choices?.[0]?.message?.content ?? '',
     inputTokens: data.usage?.prompt_tokens,

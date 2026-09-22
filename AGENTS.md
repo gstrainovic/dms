@@ -39,6 +39,8 @@ Migration `00009_organizations.sql`, Tests in `organizations.test.ts` und `e2e/t
 - **`mistral-ocr-latest` ist OCR 4.1** zu 4 USD pro 1000 Seiten. OCR 3 (`mistral-ocr-2512`) kostet die Hälfte und war im Test gleich gut oder besser (echte Fotos 99 % der Felder, OCR 4.1 97 %).
 - **Mistral OCR verliert bei Formularen mit mehreren Spalten die rechte Wertespalte** (Fahrzeugausweis: Gewichte fehlen). Vision-Modelle lesen sie.
 - **Gedrehte, unscharfe Fotos** sind die Schwachstelle der kleinen Modelle (Mistral Small 4, Ministral 3, Llama 4). Mistral OCR, Qwen3-VL und Gemma 4 bleiben stabil.
+- **Infomaniak AI Services** (Produkt 111648, Token `INFOMANIAK_AI_TOKEN` in `.env`, Scope `ai-tools`): alle Sprachmodelle dort nehmen Bilder an, obwohl die FAQ anderes sagt. Qwen3.5 und Kimi K2.6 brauchen abgeschaltetes Denken (`chat_template_kwargs`), sonst geht das ganze Antwortlimit ans Denken und der Text bleibt leer. Apertus erfindet Werte und taugt nicht für OCR.
+- **Unabhängige Rangliste ParseBench** (github `run-llama/ParseBench`, rund 2000 echte Geschäftsseiten) bestätigt das Bild: Mistral OCR 4 liegt gesamt bei 60.7, Gemma 4 31B bei 62.4, MinerU 2.5 Pro (bei kvant) bei 72.8.
 
 ## Zahlungsanbieter (technisch)
 
