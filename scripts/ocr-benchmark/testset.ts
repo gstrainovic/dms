@@ -7,6 +7,7 @@
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { CH_DOCS } from './ch-docs.ts'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const dms = path.resolve(here, '../../e2e/fixtures')
@@ -65,4 +66,24 @@ export const TEST_PAGES: TestPage[] = [
     fields: ['HEIDIPOST', 'VETERANENFAHRZEUG', 'GESELLSCHAFTSWAGEN', 'SAURER 3 DUX', '2 100 728', '180.88.125', '10300',
       '8600', '4000', '12600', '03.64', '17.12.02/10M', '09.02/BS', '11.11.2002', '405260', 'A10', 'GELB', '52,46'] },
   ...localPages(),
+  ...parseBenchPages(),
+  ...swissPages(),
 ]
+
+/** Schweizer Dokumente mit erfundenen Daten (ch-docs.ts); die PDFs erzeugt generate-ch.ts in .cache/ch */
+function swissPages(): TestPage[] {
+  return CH_DOCS
+    .map(doc => ({ id: doc.id, source: path.join(here, '.cache', 'ch', `${doc.id}.pdf`), pdfPage: 1, reference: `${doc.id}.txt`, fields: doc.fields }))
+    .filter(p => fs.existsSync(p.source))
+}
+
+/**
+ * 30 Tabellenseiten aus ParseBench (Apache-2.0), Auswahl und Felder in testset.parsebench.json (erzeugt von
+ * parsebench.ts). Die PDFs liegen in .cache/parsebench; fehlen sie, fällt der Teil weg.
+ */
+function parseBenchPages(): TestPage[] {
+  const file = path.join(here, 'testset.parsebench.json')
+  if (!fs.existsSync(file)) return []
+  const pages: TestPage[] = JSON.parse(fs.readFileSync(file, 'utf8'))
+  return pages.map(p => ({ ...p, source: path.resolve(here, p.source) })).filter(p => fs.existsSync(p.source))
+}

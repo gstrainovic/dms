@@ -19,8 +19,19 @@ export interface Price {
   outputChfPerM?: number
 }
 
+/** Seitengruppe: die Durchschnitte sind nur innerhalb einer Gruppe vergleichbar */
+export type PageGroup = 'Fixtures' | 'echte Fotos' | 'ParseBench' | 'Schweiz'
+
+function groupOf(page: TestPage): PageGroup {
+  if (page.real) return 'echte Fotos'
+  if (page.id.startsWith('pb-')) return 'ParseBench'
+  if (page.id.startsWith('ch-')) return 'Schweiz'
+  return 'Fixtures'
+}
+
 export interface SummaryRow {
   model: string
+  group: PageGroup
   variant: RunResult['variant']
   pages: number
   errors: number
@@ -40,11 +51,14 @@ const mean = (xs: number[]): number | null => (xs.length ? xs.reduce((a, b) => a
 export function summarize(results: RunResult[], pages: TestPage[], references: Record<string, string>, prices: Record<string, Price>): SummaryRow[] {
   const groups = new Map<string, RunResult[]>()
   for (const r of results) {
-    const key = `${r.model}|${r.variant}`
+    const page = pages.find(p => p.id === r.page)
+    if (!page) continue
+    const key = `${r.model}|${groupOf(page)}|${r.variant}`
     groups.set(key, [...(groups.get(key) ?? []), r])
   }
   return [...groups.values()].map((all) => {
     const { model, variant } = all[0]
+    const group = groupOf(pages.find(p => p.id === all[0].page)!)
     // Fehlgeschlagene Aufrufe (Guthaben, Timeout) sagen nichts über die Erkennung, sie zählen nur als Fehler
     const rs = all.filter(r => !r.error)
     const withRef = rs.filter(r => pages.find(p => p.id === r.page)?.reference)
@@ -65,6 +79,7 @@ export function summarize(results: RunResult[], pages: TestPage[], references: R
     }
     return {
       model,
+      group,
       variant,
       pages: rs.length,
       errors: all.length - rs.length,
@@ -92,22 +107,35 @@ function main() {
   const order = MODELS.map(m => m.id)
   rows.sort((a, b) => order.indexOf(a.model) - order.indexOf(b.model) || a.variant.localeCompare(b.variant))
 
-  const lines = [
-    '| Modell | Fassung | Zeichenfehler | Felder gefunden | Erfundene Wörter | Sekunden/Seite | CHF/1000 Seiten | Fehler |',
-    '|---|---|---:|---:|---:|---:|---:|---:|',
-    ...rows.map(r => `| ${label(r.model)} | ${r.variant} | ${pct(r.cer)} | ${pct(r.fieldRecall)} | ${pct(r.inventedWords)} | ${r.avgMs === null ? '–' : (r.avgMs / 1000).toFixed(1)} | ${r.chfPer1000Pages ?? '–'} | ${r.errors} |`),
+  const GROUPS: [PageGroup, string][] = [
+    ['Fixtures', 'Künstliche Rechnungen und Verträge aus dms `e2e/fixtures` und wartungsheft `testdateien/`, dazu der Fahrzeugausweis (echter Scan).'],
+    ['echte Fotos', 'Handyfotos echter Belege, nur lokal (Personendaten); nur Felder, kein Referenztext.'],
+    ['ParseBench', '30 Tabellenseiten aus ParseBench (Apache-2.0): Zellen mit Zahlen als Felder, kein Referenztext für die ganze Seite.'],
+    ['Schweiz', 'Erfundene Schweizer Dokumente (ch-docs.ts): QR-Rechnungen, Lohnausweis, Steuerrechnung, Leistungsabrechnung, zweispaltige Police, Notiz in Schreibschrift.'],
   ]
-  // Verpasste Felder pro Modell, damit man sieht, woran es scheitert. Bei echten Belegen nur die Anzahl:
-  // ihre Felder sind Personendaten (Namen, Kontrollschild, Fahrgestellnummer) und results.md liegt im Repo
-  const misses = results.filter(r => r.variant !== 'sauber' || r.page === 'fahrzeugausweis').map((r) => {
-    const page = TEST_PAGES.find(p => p.id === r.page)!
+  const sections = GROUPS.map(([group, description]) => {
+    const groupRows = rows.filter(r => r.group === group)
+    if (!groupRows.length) return ''
+    return [
+      `## ${group}`, '', description, '',
+      '| Modell | Fassung | Zeichenfehler | Felder gefunden | Erfundene Wörter | Sekunden/Seite | CHF/1000 Seiten | Fehler |',
+      '|---|---|---:|---:|---:|---:|---:|---:|',
+      ...groupRows.map(r => `| ${label(r.model)} | ${r.variant} | ${pct(r.cer)} | ${pct(r.fieldRecall)} | ${pct(r.inventedWords)} | ${r.avgMs === null ? '–' : (r.avgMs / 1000).toFixed(1)} | ${r.chfPer1000Pages ?? '–'} | ${r.errors} |`),
+      '',
+    ].join('\n')
+  }).join('\n')
+
+  // Verpasste Felder pro Modell, damit man sieht, woran es scheitert (ohne ParseBench, dort sind es zu viele).
+  // Bei echten Belegen nur die Anzahl: ihre Felder sind Personendaten und results.md liegt im Repo
+  const misses = results.filter(r => !r.error && !r.page.startsWith('pb-') && (r.variant !== 'sauber' || r.page === 'fahrzeugausweis' || r.page.startsWith('ch-'))).map((r) => {
+    const page = TEST_PAGES.find(p => p.id === r.page)
+    if (!page) return null
     return { model: r.model, page: r.page, variant: r.variant, real: !!page.real, total: page.fields.length, missing: fieldRecall(r.text, page.fields).missing }
-  }).filter(m => m.missing.length)
+  }).filter(m => m && m.missing.length) as { model: string, page: string, variant: string, real: boolean, total: number, missing: string[] }[]
   const missLines = misses.sort((a, b) => order.indexOf(a.model) - order.indexOf(b.model))
     .map(m => `- ${label(m.model)}, ${m.page} (${m.variant}): ${m.real ? `${m.missing.length} von ${m.total} Feldern` : m.missing.join(', ')}`)
 
-  const real = TEST_PAGES.filter(p => p.real).length
-  const md = `# OCR-Vergleich\n\nErzeugt von \`summary.ts\` aus \`results.json\`. Künstliche Seiten: ${TEST_PAGES.length - real}, je sauber und verzerrt (Fahrzeugausweis nur sauber); echte Handyfotos: ${real} (nur Felder, keine Referenztexte).\n\n${lines.join('\n')}\n\n## Nicht gefundene Felder (verzerrt, echt, Fahrzeugausweis)\n\n${missLines.join('\n') || 'keine'}\n`
+  const md = `# OCR-Vergleich\n\nErzeugt von \`summary.ts\` aus \`.cache/results.json\`. Die Durchschnitte sind nur innerhalb einer Gruppe vergleichbar.\n\n${sections}\n## Nicht gefundene Felder (ohne ParseBench)\n\n${missLines.join('\n') || 'keine'}\n`
   fs.writeFileSync(path.join(here, 'results.md'), md)
   console.log(md)
 }

@@ -29,6 +29,17 @@ test('summarize mittelt pro Modell und Fassung, CER nur für Seiten mit Referenz
   assert.equal(distorted.fieldRecall, 0.5)
 })
 
+test('summarize trennt nach Seitengruppe: Fixtures, echte Fotos, ParseBench, Schweiz', () => {
+  const groupPages: TestPage[] = [
+    { id: 'rechnung-de', source: 'x.png', fields: ['1'] },
+    { id: 'echt-01', source: 'x.jpg', fields: ['1'], real: true },
+    { id: 'pb-0001_page1', source: 'x.pdf', fields: ['1'] },
+    { id: 'ch-lohnausweis', source: 'x.pdf', fields: ['1'] },
+  ]
+  const rows = summarize(groupPages.map(p => ({ model: 'm', page: p.id, variant: p.real ? 'echt' : 'sauber', text: '1', ms: 1 })), groupPages, {}, {})
+  assert.deepEqual(rows.map(r => r.group).sort(), ['Fixtures', 'ParseBench', 'Schweiz', 'echte Fotos'])
+})
+
 test('summarize meldet null statt 0, wo es nichts zu messen gibt', () => {
   const rows = summarize([
     { model: 'm', page: 'b', variant: 'sauber', text: 'GELB', ms: 5 },

@@ -13,8 +13,8 @@ Davon hängt Späteres ab.
   - Messaufbau steht in `scripts/ocr-benchmark/` (`pnpm ocr-benchmark`, Zahlen in `results.md`). Offen:
   - Ab 25.09.2026 (OpenRouter-Guthaben): echte Fotos 06–10 und Llama 4 Scout nachholen, `node scripts/ocr-benchmark/run.ts --models=…`
   - kvant-Konto (Firma D23547, Plan Evaluation) wartet auf die Firmenprüfung; danach API-Key im Portal holen und DeepSeek OCR und MinerU 2.5 testen, die es nur dort gibt, dazu Tokens pro Seite beim Schweizer Host nachmessen
-  - Testsatz erweitern, die bisherigen echten Fotos sind fast nur Werkstattquittungen: rund 30 Seiten aus ParseBench (Hugging Face `llamaindex/ParseBench`, Apache-2.0, echte Geschäftsdokumente mit Tabellen und Formularen); XFUND Deutsch (github `doc-analysis/XFUND`, Lizenz vorher klären); eigener Schweiz-Satz mit erfundenen Daten: QR-Rechnungen (swissqrbill), Lohnausweis (Formular 11 ESTV) und kantonales Steuerformular, gedruckt oder verzerrt
   - Ergebnis und Entscheid mit Zahlen in `AGENTS.md` festhalten
+  - Zum Schluss alle Resultate in `scripts/ocr-benchmark/ocr-vergleich.md` (Methode, Testsatz, Tabellen, Kosten, Befunde, Grenzen); Grundlage für einen Artikel auf strainovic-it.ch in einer neuen Kategorie «KI»
   - Gewinnt ein Schweizer Anbieter: Anbieter im ai-proxy umschaltbar machen (betrifft auch auto-service), Embeddings mit anderer Dimension als 1024 heissen Migration der pgvector-Spalte und Neuindexierung. Kandidat für Chat und Embeddings ist Infomaniak AI Services (Server laufen schon dort, AVV im Manager, keine Grundgebühr, OpenAI-kompatibel)
 - [ ] Dev ohne Podman (Windows): Dev-Instanz per SSH-Tunnel wie `wartungsheft-dev`, braucht die Ports 54321, 54322 und 54324; oder Supabase auf `wartungsheft-dev` mitlaufen lassen, falls der RAM reicht
 

@@ -28,7 +28,10 @@ export interface ModelSpec {
   extra?: Record<string, unknown>
 }
 
-const NO_THINKING_QWEN = { chat_template_kwargs: { enable_thinking: false } }
+/** Dichte Tabellenseiten brauchen mehr als 4096 Tokens; Mistral OCR hat kein solches Limit, das wäre unfair */
+const MAX_OUTPUT_TOKENS = 16_000
+
+const NO_THINKING_QWEN ={ chat_template_kwargs: { enable_thinking: false } }
 
 export const MODELS: ModelSpec[] = [
   { id: 'mistral-ocr', label: 'Mistral OCR 4.1 (Referenz)', api: 'mistral-ocr', model: 'mistral-ocr-latest' },
@@ -122,7 +125,8 @@ async function postJson(url: string, key: string, body: unknown): Promise<any> {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(180_000),
+      // Lange Tabellenseiten mit bis zu 16'000 Ausgabe-Tokens brauchen bei den grossen Modellen mehrere Minuten
+      signal: AbortSignal.timeout(600_000),
     })
     if (res.ok) return res.json()
     const text = await res.text()
@@ -149,7 +153,7 @@ async function runOne(spec: ModelSpec, image: string): Promise<Omit<RunResult, '
     : spec.api === 'infomaniak'
       ? [`https://api.infomaniak.com/2/ai/${process.env.INFOMANIAK_AI_PRODUCT}/openai/v1/chat/completions`, process.env.INFOMANIAK_AI_TOKEN!, {}]
       : ['https://openrouter.ai/api/v1/chat/completions', process.env.OPENROUTER_API_KEY!, { usage: { include: true } }]
-  const data = await postJson(url, key, { model: spec.model, messages, temperature: 0, max_tokens: 4096, ...extra, ...spec.extra })
+  const data = await postJson(url, key, { model: spec.model, messages, temperature: 0, max_tokens: MAX_OUTPUT_TOKENS, ...extra, ...spec.extra })
   return {
     text: data.choices?.[0]?.message?.content ?? '',
     inputTokens: data.usage?.prompt_tokens,
@@ -173,14 +177,20 @@ async function main() {
   const pages = TEST_PAGES.filter(p => !onlyPages || onlyPages.includes(p.id))
   const resultsFile = path.join(cache, 'results.json')
   const previous: RunResult[] = fs.existsSync(resultsFile) ? JSON.parse(fs.readFileSync(resultsFile, 'utf8')) : []
-  const results = previous.filter(r => !models.some(m => m.id === r.model) || !pages.some(p => p.id === r.page))
+  // --truncated: nur Aufrufe wiederholen, deren Antwort am alten Limit von 4096 Tokens abgeschnitten wurde
+  // oder die mit einem Fehler (Zeitüberschreitung) endeten
+  const onlyTruncated = process.argv.includes('--truncated')
+  const truncated = (r: RunResult) => !!r.error || ((r.outputTokens ?? 0) >= 4090 && (r.outputTokens ?? 0) < MAX_OUTPUT_TOKENS - 10)
+  const selected = (model: string, page: string, variant: string) => models.some(m => m.id === model) && pages.some(p => p.id === page)
+    && (!onlyTruncated || previous.some(r => r.model === model && r.page === page && r.variant === variant && truncated(r)))
+  const results = previous.filter(r => !selected(r.model, r.page, r.variant))
 
   const jobs = pages.flatMap(page => {
     const images = prepareImages(page)
     // Der Fahrzeugausweis ist schon ein echter Scan, eine zusätzliche Verzerrung wäre doppelt
     const variants: RunResult['variant'][] = page.real ? ['echt'] : page.id === 'fahrzeugausweis' ? ['sauber'] : ['sauber', 'verzerrt']
     return models.flatMap(spec => variants.map(variant => ({ spec, page, variant, image: images[variant]! })))
-  })
+  }).filter(job => selected(job.spec.id, job.page.id, job.variant))
 
   let done = 0
   await pool(jobs, 4, async ({ spec, page, variant, image }) => {

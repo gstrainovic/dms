@@ -14,6 +14,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.95.3
         version: 2.95.3
+      swissqrbill:
+        specifier: ^4.4.1
+        version: 4.4.1(typescript@5.9.3)
 
   apps/dms:
     dependencies:
@@ -993,6 +996,21 @@ packages:
     resolution: {integrity: sha512-H+ue8Zo4vJmV2nRjpx86P35lzwDT3nItnIsocgumgr0hHMQ+ZGq5vrERg9kJBo5AWGmxZDhzDo+WVIJqkB0cGA==}
     engines: {node: '>=16'}
 
+  svg-engine@0.3.0:
+    resolution: {integrity: sha512-s172jAcwfoCcvM/6DwNBvmWN3brztHGFENCR+RU3CBJKeBxPrRlTltVxX1Je5hst782QgP8PM6U37vUR/RhPng==}
+
+  swissqrbill@4.4.1:
+    resolution: {integrity: sha512-iDz+1F1trXoyUhnNWg7F4D1mmJ+0MM0JUtkTGenQw7nQGaQrHjYdEcJBkevN170B/oSNKJvpTeH92+dHGvFRnQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      pdfkit: '>=0.13.0'
+      typescript: '>=4.7.0'
+    peerDependenciesMeta:
+      pdfkit:
+        optional: true
+      typescript:
+        optional: true
+
   tailwindcss@4.1.18:
     resolution: {integrity: sha512-4+Z+0yiYyEtUVCScyfHCxOYP06L5Ne+JiHhY2IjR2KWMIWhJOYZKLSGZaP5HkZ8+bY0cxfzwDE5uOmzFXyIwxw==}
 
@@ -1929,6 +1947,14 @@ snapshots:
   superjson@2.2.6:
     dependencies:
       copy-anything: 4.0.5
+
+  svg-engine@0.3.0: {}
+
+  swissqrbill@4.4.1(typescript@5.9.3):
+    dependencies:
+      svg-engine: 0.3.0
+    optionalDependencies:
+      typescript: 5.9.3
 
   tailwindcss@4.1.18: {}
 

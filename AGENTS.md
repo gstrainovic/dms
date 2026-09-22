@@ -40,6 +40,8 @@ Migration `00009_organizations.sql`, Tests in `organizations.test.ts` und `e2e/t
 - **Mistral OCR verliert bei Formularen mit mehreren Spalten die rechte Wertespalte** (Fahrzeugausweis: Gewichte fehlen). Vision-Modelle lesen sie.
 - **Gedrehte, unscharfe Fotos** sind die Schwachstelle der kleinen Modelle (Mistral Small 4, Ministral 3, Llama 4). Mistral OCR, Qwen3-VL und Gemma 4 bleiben stabil.
 - **Infomaniak AI Services** (Produkt 111648, Token `INFOMANIAK_AI_TOKEN` in `.env`, Scope `ai-tools`): alle Sprachmodelle dort nehmen Bilder an, obwohl die FAQ anderes sagt. Qwen3.5 und Kimi K2.6 brauchen abgeschaltetes Denken (`chat_template_kwargs`), sonst geht das ganze Antwortlimit ans Denken und der Text bleibt leer. Apertus erfindet Werte und taugt nicht für OCR.
+- **Schwere Tabellen (30 ParseBench-Seiten):** Sauber gescannt liegen Kimi K2.6 (97.5 % der Zellen) und Qwen3.5 (95–96 %) vor Mistral OCR 4.1 (94 %), sind aber 4- bis 10-mal langsamer und 3- bis 4-mal teurer. Verzerrt gewinnt Mistral OCR 4.1 deutlich (91 % gegen höchstens 82 %). OCR 3 fällt bei Tabellen ab (90 %). Vision-Modelle brauchen für dichte Tabellen mehr als 4096 Ausgabe-Tokens und bis zu 5 Minuten pro Seite.
+- **Schweizer Dokumente** (`ch-docs.ts`, erfundene QR-Rechnungen, Lohnausweis, Steuerrechnung usw.): alle Modelle finden fast alle Felder, Mistral OCR hat die wenigsten Zeichenfehler.
 - **Unabhängige Rangliste ParseBench** (github `run-llama/ParseBench`, rund 2000 echte Geschäftsseiten) bestätigt das Bild: Mistral OCR 4 liegt gesamt bei 60.7, Gemma 4 31B bei 62.4, MinerU 2.5 Pro (bei kvant) bei 72.8.
 
 ## Zahlungsanbieter (technisch)
