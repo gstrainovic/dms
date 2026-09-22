@@ -1,0 +1,17 @@
+Service-Heft
+Volkswagen Golf VIII — WVWZZZ1KZMP012345
+Hersteller-Wartungsintervalle
+Wartung km Monate
+Ölwechsel 15.000 12
+Inspektion 30.000 24
+Zahnriemen 90.000 60
+Serviceeinträge
+Datum: 15.03.2022 km-Stand: 15.200
+Werkstatt: Autohaus Berlin GmbH
+Arbeiten: Ölwechsel mit Filter, Inspektion nach Herstellervorgabe
+Datum: 20.09.2023 km-Stand: 28.400
+Werkstatt: Autohaus Berlin GmbH
+Arbeiten: Ölwechsel, Bremsbeläge vorne erneuert, Luftfilter gewechselt
+Datum: 10.06.2024 km-Stand: 38.500
+Werkstatt: Kfz-Meister Müller
+Arbeiten: Ölwechsel, Inspektion, Klimaanlage Service

@@ -31,6 +31,15 @@ Migration `00009_organizations.sql`, Tests in `organizations.test.ts` und `e2e/t
 - **ai-proxy pro Organisation:** Konto im Proxy ist `organizations.id` (`accountOf` in `supabase/functions/ai-proxy/index.ts`), `ai_usage.user_id` und `ai_subscriptions.user_id` zeigen auf `organizations`. Pipeline-Functions geben `doc.org_id` direkt in `x-user-id` an.
 - **Schemas:** `org_id` null heisst mitgeliefert, für alle lesbar und nicht änderbar; eigene Schemas legen nur Admins an.
 
+## OCR-Vergleich
+
+`scripts/ocr-benchmark/` vergleicht Mistral OCR mit Vision-Modellen, die Infomaniak und kvant/Phoeniqs in der Schweiz anbieten. Aufruf `pnpm ocr-benchmark`, Zahlen in `results.md`. Die offenen Modelle laufen für die Qualitätsmessung über OpenRouter (gleiche Gewichte), die Kosten rechnet `prices.ts` mit den Schweizer Preislisten.
+
+- **Testsatz:** 13 künstliche Seiten aus `e2e/fixtures` und wartungsheft `testdateien/` (Referenztext aus HTML bzw. PDF-Textebene), je sauber und künstlich verzerrt, dazu echte Handyfotos aus wartungsheft `tmp/test-images`. Die echten Fotos stehen nur in `testset.local.json` und `.cache/` (beide gitignored), weil sie Personendaten enthalten; in `results.md` erscheinen sie ohne Inhalte.
+- **`mistral-ocr-latest` ist OCR 4.1** zu 4 USD pro 1000 Seiten. OCR 3 (`mistral-ocr-2512`) kostet die Hälfte und war im Test gleich gut oder besser (echte Fotos 99 % der Felder, OCR 4.1 97 %).
+- **Mistral OCR verliert bei Formularen mit mehreren Spalten die rechte Wertespalte** (Fahrzeugausweis: Gewichte fehlen). Vision-Modelle lesen sie.
+- **Gedrehte, unscharfe Fotos** sind die Schwachstelle der kleinen Modelle (Mistral Small 4, Ministral 3, Llama 4). Mistral OCR, Qwen3-VL und Gemma 4 bleiben stabil.
+
 ## Zahlungsanbieter (technisch)
 
 Payrexx statt Stripe, Begründung und Preisvergleich im privaten Repo. Für die Umsetzung im Proxy relevant: TWINT-Abos über Tokenisierung, fehlgeschlagene Abbuchung wird einmal wiederholt (Status overdue → failed), Kundenportal per `POST /AuthToken` (Login-Link), Webhook als JSON mit `X-Webhook-Signature` (HMAC-SHA256, hex, über den Raw-Body), bis zu 10 Zustellversuche, Auth per `X-API-KEY`, Testmodus mit Testkarten. Die Abo-Endpunkte sind als «experimental documentation» markiert. Kein TS-SDK, nur PHP. Der Stripe-Code im Proxy bleibt als zweite Implementierung.

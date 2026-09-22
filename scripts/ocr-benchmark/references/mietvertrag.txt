@@ -1,0 +1,17 @@
+Mietvertrag
+Vermieter
+Hans Schmidt, Leopoldstraße 42, 80802 München
+Mieter
+Anna Müller, bisherige Anschrift: Karlstraße 8, 80333 München
+Mietobjekt
+Adresse: Schwabing, Hohenzollernstr. 15, 80801 München
+Stockwerk: 3. OG links
+Zimmer: 3 Zimmer, Küche, Bad
+Wohnfläche: 78 m²
+Mietbeginn: 01.02.2025
+Miete
+Kaltmiete: 1.200,00 € monatlich
+Nebenkosten: 250,00 € monatlich (Vorauszahlung)
+Kaution: 3.600,00 € (3 Monatsmieten)
+Vertragsdatum: 15.01.2025
+Vermieter Mieter

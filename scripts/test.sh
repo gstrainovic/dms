@@ -84,4 +84,5 @@ log "Datenbank bereit"
 log "Starte Tests..."
 cd "$PROJECT_ROOT"
 pnpm test:functions
+pnpm test:scripts
 pnpm -r test "$@"

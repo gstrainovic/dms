@@ -10,11 +10,12 @@ Davon hängt Späteres ab.
 
 - [ ] **Domain für dms festlegen.** Brauchen Mail-Versand, Eingangs-Mailadresse, Caddy, `site_url` und die Rechtstexte
 - [ ] **OCR-Test Mistral gegen alle Schweizer Optionen.** Entscheidet, ob OCR und KI in die Schweiz wandern oder bei Mistral bleiben, und damit Datenschutz, AVV und Vermarktung. Qualität vor Standort: Ist die Schweizer OCR schlechter, bleibt es bei Mistral. dms-Dokumente (Steuern, Verträge, Gesundheit) sind heikler als Werkstattrechnungen; Mistral in Frankreich ist nach nDSG zulässig (EU in Anhang 1 DSV).
-  - Nur **gescannte und fotografierte** Dokumente testen. PDFs aus Word und Co. haben eingebetteten Text, den `process-ocr` schon lokal ausliest, ohne OCR
-  - Testsatz 30–50 echte Seiten: schiefe und unscharfe Handyfotos, Scans, Steuerformulare mit Tabellen, mehrspaltige Seiten, Kleingedrucktes, Handschrift, Umlaute, Frankenbeträge, IBAN und QR-Zahlteil
-  - Kandidaten: Mistral OCR (Referenz); Infomaniak AI Services, jedes Modell mit Bildeingabe (Mistral Small 4, Qwen3.5 u. a., welche Bilder annehmen, ist dort nicht dokumentiert); kvant/Phoeniqs DeepSeek OCR, Qwen3 VL 235B, Gemma 4, Llama 4, Apertus 1.5; Swisscom Swiss AI Platform, falls als Einzelfirma zugänglich; Exoscale Managed Inference, sobald verfügbar; selbst betriebene OCR-Modelle auf einer GPU-Instanz in der Schweiz als Kostenvergleich
-  - Messen: Zeichenfehlerrate gegen eine von Hand geprüfte Referenz, Tabellen und Struktur, Feld-Extraktion (Betrag, Datum, IBAN, Rechnungsnummer), erfundener Text, Tokens, Kosten und Laufzeit pro Seite, Grenzen pro Anfrage (mehrseitige Scans als Einzelbilder)
-  - Ergebnis mit Zahlen in `AGENTS.md` festhalten, Testsatz ohne Personendaten im Repo oder privat ablegen
+  - Messaufbau steht in `scripts/ocr-benchmark/` (`pnpm ocr-benchmark`, Zahlen in `results.md`). Offen:
+  - Ab 25.09.2026 (OpenRouter-Guthaben): echte Fotos 06–10 und Llama 4 Scout nachholen, `node scripts/ocr-benchmark/run.ts --models=…`
+  - kvant-Konto (Firma D23547, Plan Evaluation) wartet auf die Firmenprüfung; danach API-Key im Portal holen und DeepSeek OCR und MinerU 2.5 testen, die es nur dort gibt, dazu Tokens pro Seite beim Schweizer Host nachmessen
+  - Infomaniak AI Services mit dem Startguthaben: nachprüfen, ob Mistral Small 4 und Ministral 3 dort Bilder annehmen (FAQ und Modellseite widersprechen sich)
+  - Testsatz erweitern auf 30–50 echte Seiten: Steuerformulare mit Tabellen, mehrspaltige Seiten, Kleingedrucktes, Handschrift, QR-Zahlteil; die bisherigen echten Fotos sind fast nur Werkstattquittungen
+  - Ergebnis und Entscheid mit Zahlen in `AGENTS.md` festhalten
   - Gewinnt ein Schweizer Anbieter: Anbieter im ai-proxy umschaltbar machen (betrifft auch auto-service), Embeddings mit anderer Dimension als 1024 heissen Migration der pgvector-Spalte und Neuindexierung. Kandidat für Chat und Embeddings ist Infomaniak AI Services (Server laufen schon dort, AVV im Manager, keine Grundgebühr, OpenAI-kompatibel)
 - [ ] Dev ohne Podman (Windows): Dev-Instanz per SSH-Tunnel wie `wartungsheft-dev`, braucht die Ports 54321, 54322 und 54324; oder Supabase auf `wartungsheft-dev` mitlaufen lassen, falls der RAM reicht
 

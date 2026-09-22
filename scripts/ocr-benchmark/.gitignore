@@ -1,0 +1,4 @@
+# Gerasterte und verzerrte Bilder, Rohausgaben der Modelle
+.cache/
+# Echte Belege mit Personendaten (Pfade und abgelesene Felder), nur lokal
+testset.local.json

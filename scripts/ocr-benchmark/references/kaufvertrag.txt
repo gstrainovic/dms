@@ -1,0 +1,18 @@
+Kaufvertrag über ein gebrauchtes Kraftfahrzeug
+Verkäufer
+Hans Schmidt, Berliner Str. 15, 10115 Berlin
+Käufer
+Max Mustermann, Hauptstr. 7, 80331 München
+Fahrzeugdaten
+Marke: Volkswagen
+Modell: Golf VIII
+Erstzulassung: 03/2021
+Fahrgestellnummer: WVWZZZ1KZMP012345
+Kennzeichen: B-HS 4321
+Kilometerstand: 38.500 km
+Motorart: Benzin
+Leistung: 110 kW / 150 PS
+Kaufpreis
+22.500,00 € (in Worten: zweiundzwanzigtausendfünfhundert Euro)
+Datum: 20.01.2025
+Verkäufer Käufer

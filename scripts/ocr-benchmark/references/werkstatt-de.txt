@@ -1,0 +1,14 @@
+Autowerkstatt München GmbH
+Leopoldstraße 42, 80802 München
+Rechnung Nr: 2024-0847
+Datum: 15.01.2025
+Kunde: Max Mustermann
+Fahrzeug: BMW 320d, M-AB 1234
+Kilometerstand: 47.500 km
+Position Betrag
+Ölwechsel inkl. Motoröl 5W-30 89,90 €
+Ölfilter wechseln 24,50 €
+Bremsbeläge vorne erneuern 185,00 €
+Arbeitszeit (2,5 Std.) 187,50 €
+Gesamt (inkl. MwSt.) 486,90 €
+Zahlbar innerhalb von 14 Tagen.

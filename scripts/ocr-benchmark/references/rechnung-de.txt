@@ -1,0 +1,13 @@
+Stadtwerke München GmbH
+Renatastraße 14, 80639 München
+Rechnung Nr: SM-2024-001
+Datum: 15.11.2024
+Kunde: Max Mustermann
+Kundennr: 12345678
+Stromlieferung 01.10.2024 – 31.10.2024
+Position Betrag
+Arbeitspreis (285 kWh × 0,32 €) 91,20 €
+Grundpreis 12,50 €
+Netzentgelt 23,80 €
+Gesamt (inkl. MwSt.) 127,50 €
+Zahlbar innerhalb von 14 Tagen. IBAN: DE89 3704 0044 0532 0130 00
