@@ -216,6 +216,7 @@ pnpm dev:frontend
 - `pnpm test:e2e` — **Startet alles + DB-Reset + alle 55 Playwright E2E Tests**
 - `pnpm test:all` — **Alle Tests:** Unit/Integration + E2E (112 Tests gesamt)
 - `pnpm build` — Production Build (vue-tsc + vite)
+- `scripts/dev-vm.sh tunnel|sync|reset|status|logs|restart|ssh` — Dev-Supabase auf der Infomaniak-Instanz `dms-dev` per SSH-Tunnel statt Podman (PC ohne Docker), siehe AGENTS.md «Entwickeln ohne Docker»
 - `supabase db reset` — DB zuruecksetzen + Migrations
 - `supabase gen types typescript --local` — DB-Typen regenerieren
 

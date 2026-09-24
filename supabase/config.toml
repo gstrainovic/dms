@@ -386,7 +386,9 @@ verify_jwt = false
 verify_jwt = false
 
 [analytics]
-enabled = true
+# Aus: die Log-Pipeline (Logflare + Vector) frisst rund 1 GB RAM und liefert nur den Logs-Tab im Studio.
+# Ohne sie passt der Stack neben Docker auf die 4-GB-Dev-Instanz (scripts/dev-vm.sh) und startet lokal schneller.
+enabled = false
 port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"
