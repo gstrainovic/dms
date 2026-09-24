@@ -72,8 +72,9 @@ ohne Docker oder Podman ein SSH-Tunnel zu einer Dev-Instanz; am Code ändert sic
   etwa 1 GB), gilt auch lokal.
 - **Daten**: leere Datenbank mit Migrationen und Seed, wie nach `supabase db reset`. Die Tests leeren Tabellen selbst,
   Daten dort sind Wegwerfdaten. Auth-Mails landen in Mailpit (Port 54324 im Tunnel).
-- **Bedienung vom Laptop oder anderen PC:** `scripts/dev-vm.sh` (`tunnel`, `sync`, `reset`, `status`, `logs`, `restart`,
-  `ssh`; Host per `DMS_DEV_VM` überschreibbar). Die Edge Functions laufen **auf der Instanz** aus deren Checkout: Änderungen
+- **Bedienung vom Laptop oder anderen PC:** `scripts/dev-vm.sh` (`tunnel`, `tunnel-stop`, `sync`, `reset`, `status`,
+  `logs`, `restart`, `ssh`; Host per `DMS_DEV_VM` überschreibbar). Auf dem Laptop den Tunnel vor `pnpm dev` wieder
+  schliessen, sonst kollidiert das lokale Supabase mit Port 54321. Die Edge Functions laufen **auf der Instanz** aus deren Checkout: Änderungen
   an `supabase/` erst pushen, dann `dev-vm.sh sync` (git pull + Edge Runtime neu starten). `reset` macht zusätzlich
   `supabase db reset`. Änderungen an `config.toml` oder `.env` brauchen `restart` (`supabase stop && start`).
 - **Ablauf auf dem anderen PC** (braucht Node, pnpm, Git, Playwright-Browser, Deno für `test:functions`, den SSH-Key und

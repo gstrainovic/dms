@@ -13,6 +13,7 @@ usage() {
 Aufruf: scripts/dev-vm.sh <befehl>
 
   tunnel   SSH-Tunnel im Hintergrund öffnen (Ports ${PORTS[*]}), danach: pnpm dev:frontend
+  tunnel-stop  Tunnel schliessen (vorher nötig, wenn Supabase wieder lokal mit Podman laufen soll)
   sync     git pull auf der Instanz und Edge Runtime neu starten (nach gepushten Änderungen an supabase/)
   reset    sync + supabase db reset (saubere DB vor Tests, wie scripts/test.sh lokal)
   status   Container und API-Antwort auf der Instanz
@@ -37,6 +38,9 @@ case "${1:-}" in
     fi
     ssh -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -f -N "${tunnel_args[@]}" "$VM"
     echo "Tunnel offen: ${PORTS[*]} → $VM"
+    ;;
+  tunnel-stop)
+    pkill -f "ssh .*-L ${PORTS[0]}:localhost:${PORTS[0]}.* $VM" && echo "Tunnel geschlossen" || echo "Kein Tunnel offen"
     ;;
   sync)
     remote "git pull -q && git log --oneline -n 1 && docker restart supabase_edge_runtime_dms >/dev/null && echo 'Edge Runtime neu gestartet'"
