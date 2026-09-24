@@ -38,3 +38,6 @@ business-plan/
 .vscode/
 *.swp
 *.swo
+
+# Playwright MCP Debug-Artefakte
+.playwright-mcp/
