@@ -1,73 +1,68 @@
 # Evaluation bestehender Open-Source-Lösungen
 
-Vor dem Eigenbau wurden 30+ Tools und Plattformen gegen die fünf Pflicht-Anforderungen aus `CLAUDE.md` geprüft
-(Upload mit Archiv, Mistral OCR, Auto-Tagging, Volltextsuche + Chat/RAG, ein Dashboard).
-Stars und Zustand der Projekte: Stand 08.02.2026.
+Geprüft gegen die fünf Pflicht-Anforderungen aus `CLAUDE.md`: Upload mit Archiv, Mistral OCR, Auto-Tagging,
+Volltextsuche + Chat/RAG, **eine** Oberfläche. Zweimal geprüft: am 08.02.2026 vor dem Eigenbau und am 27.09.2026.
 
 ## Fazit
 
-**KEINES erfüllt alle 5 Anforderungen.**
+Kein Projekt erfüllt alle fünf in einer Oberfläche. Am nächsten kommen:
 
-Beste Teilstücke:
-- **Bestes DMS-UI:** Papermerge (Ordner, Tags, Versionierung, REST API)
-- **Bestes Auto-Tagging:** Docspell (ML via Stanford NLP, lernt dazu)
-- **Bestes RAG/Chat:** kotaemon (Hybrid Volltext+Vektor, Multi-Hop)
-- **Mistral OCR:** Kein Tool hat es nativ — überall Custom-Code nötig
+- **Paperless-ngx 3 + paperless-gpt:** alles ausser einer Oberfläche. Paperless-ngx hat seit 3.0 (22.07.2026)
+  KI-Vorschläge und einen Chat über die Dokumente, OCR in der Cloud aber nur über Azure. Mistral OCR und
+  automatisches Tagging beim Einlesen bringt paperless-gpt als zweites Programm mit eigener Oberfläche.
+- **Papra:** Mistral OCR und LLM-Tagging seit 26.6.0 (02.07.2026), eine Oberfläche, aber kein Chat/RAG.
 
-## DMS-/RAG-Projekte nach Stars
+## Warum im Februar 2026 selbst gebaut wurde
 
-| # | Projekt | Stars | Upload | Mistral OCR | Auto-Tag | Volltext | RAG/Chat | RAM | Ergebnis |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 | [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) | 36.4K | Ja | Nein | Nein | Ja | Nein | Mittel | VERWORFEN (2 UIs) |
-| 2 | [AnythingLLM](https://github.com/Mintplex-Labs/anything-llm) | 54.3K | Ja | Nein | Nein | Nein | Ja | 2 GB | VERWORFEN (nur RAG) |
-| 3 | [kotaemon](https://github.com/Cinnamon/kotaemon) | 25.0K | Ja | Custom Loader | Nein | Hybrid | Ja | ~4 GB | VERWORFEN (kein Tagging) |
-| 4 | [CKAN](https://github.com/ckan/ckan) | 4.9K | Datenkatalog | Custom Ext. | Nein | Solr | Alpha | 6 Container | VERWORFEN (falsches Tool) |
-| 5 | [Papra](https://github.com/papra-hq/papra) | 3.8K | Ja | Nein (fest) | Regeln | Einfach | Nein | ~200 MB | VERWORFEN (zu simpel) |
-| 6 | [Papermerge](https://github.com/ciur/papermerge) | 2.9K | Ja | Worker-Fork | Regeln | Solr | Nein | Leicht | VERWORFEN (kein RAG) |
-| 7 | [Teedy](https://github.com/sismics/docs) | 2.4K | Ja | Nein (fest) | Nein | Ja | Nein | ~1 GB | VERWORFEN (kein Tagging/RAG) |
-| 8 | [Docspell](https://github.com/eikek/docspell) | 2.2K | Ja | Workaround | ML (Stanford) | SOLR | Nein | 3-5 GB | VERWORFEN (kein RAG, zu schwer) |
-| 9 | [paperless-gpt](https://github.com/icereed/paperless-gpt) | 1.9K | Addon | LLM-Vision | Ja | Via Paperless | Via Paperless | Braucht Paperless | VERWORFEN |
-| 10 | [PdfDing](https://github.com/mrmn2/PdfDing) | 1.6K | Ja | Nein | Nein | Nein | Nein | Leicht | VERWORFEN (nur PDFs) |
-| 11 | [OpenKM](https://github.com/openkm/document-management-system) | 827 | Ja | Java-Plugin | Nur Prof. | Lucene | Nein | 3.5 GB | VERWORFEN (Paywall, veraltet) |
-| 12 | [Mayan EDMS](https://github.com/mayan-edms/Mayan-EDMS) | 775 | Ja | Custom | Regeln | Ja | Nein | Mittel | VERWORFEN (~40-60h) |
-| 13 | [Lodestone](https://github.com/LodestoneHQ/lodestone) | 522 | Ja | Nein | Nein | ES | Nein | 8 Container | VERWORFEN (TOT seit 2024) |
-| 14 | [Papermerge Core](https://github.com/papermerge/papermerge-core) | 436 | Ja | Worker-Fork | Regeln | Solr | Nein | Leicht | = Papermerge v3 |
-| 15 | [OCA/dms](https://github.com/OCA/dms) | 150 | Via Odoo | Nein | Regex | Schwach | Nein | Odoo nötig | VERWORFEN (Overkill) |
-| 16 | [RAG-Anything](https://github.com/HKUDS/RAG-Anything) | 1K+ | Nein | Nein | Nein | Indirekt | Ja | MinerU nötig | VERWORFEN (nur Framework) |
+Ausschlaggebend war die eine Oberfläche. Paperless-ngx 2.20 hatte weder KI noch Chat. Die nächste Kombination
+waren drei Programme: Paperless-ngx als Archiv, paperless-gpt für Mistral OCR und Tagging, paperless-ai für den
+RAG-Chat, jedes mit eigener Oberfläche.
 
-## RAG-/AI-Frameworks (getestet)
+Die Tabelle vom Februar führte bei paperless-gpt nur «LLM-Vision» als OCR. Mistral OCR kann es aber seit 05.05.2025
+(`OCR_PROVIDER=mistral_ocr`). Am Entscheid ändert das nichts, weil der Chat fehlte. paperless-ai fehlte in der
+Tabelle ganz.
 
-| Projekt | Stars | Ergebnis |
-|---|---|---|
-| [Open WebUI](https://github.com/open-webui/open-webui) | 70K+ | VERWORFEN (kein DMS-Archiv) |
-| [Dify](https://github.com/langgenius/dify) | 70K+ | VERWORFEN (kein DMS) |
-| [private-gpt](https://github.com/zylon-ai/private-gpt) | 57.1K | VERWORFEN (kein DMS-Archiv) |
-| [RAGFlow](https://github.com/infiniflow/ragflow) | 35K+ | VERWORFEN (lokale OCR hardcoded) |
+## Stand 27.09.2026
+
+| Projekt | Mistral OCR | Auto-Tag | Volltext | RAG/Chat | Ergebnis |
+|---|---|---|---|---|---|
+| [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) 3.2 | Nein (Tesseract lokal, Remote-OCR nur Azure) | LLM-Vorschläge beim Öffnen | Ja | Ja, seit 3.0 | Ohne Mistral OCR |
+| [paperless-gpt](https://github.com/icereed/paperless-gpt) 0.28 | Ja | Ja, automatisch | Via Paperless | Nein | Zweites Programm neben Paperless |
+| [paperless-ai](https://github.com/clusterzx/paperless-ai) 3.0.9 | Nein | Ja | Via Paperless | Ja | Laut README nicht mehr gepflegt |
+| [Papra](https://github.com/papra-hq/papra) 26.6 | Ja | LLM | Ja | Nein | Kein RAG/Chat |
+| [Mayan EDMS](https://gitlab.com/mayan-edms/mayan-edms) 4.12 | Steckbares Backend | LLM über Workflows | Ja | Kein Chat für Endnutzer | ~40-60h Anpassung |
+| [kotaemon](https://github.com/Cinnamon/kotaemon) 0.12 | Nein (PaddleOCR lokal) | Nein | Hybrid | Ja | Kein Archiv, kein Tagging |
+| [AnythingLLM](https://github.com/Mintplex-Labs/anything-llm) | Nein | Nein | Nein | Ja | Nur RAG |
+| [RAGFlow](https://github.com/infiniflow/ragflow) 0.27 | Ja, seit 0.27.0 | Chunk-Tags | Hybrid | Ja | Kein DMS-Archiv, braucht 16 GB RAM |
+| [Open WebUI](https://github.com/open-webui/open-webui) | Ja | Nur Chats | — | Ja | Kein DMS-Archiv |
+| [Dify](https://github.com/langgenius/dify) | Plugin | Nein | — | Ja | Kein DMS |
+| [private-gpt](https://github.com/zylon-ai/private-gpt) 1.0 | Nein | Nein | — | API | API-Plattform, kein DMS |
+| [Papermerge Core](https://github.com/papermerge/papermerge-core) | Worker-Fork | Regeln | Solr | Nein | Kein RAG, sucht Maintainer |
+| [Docspell](https://github.com/eikek/docspell) | Workaround | ML (Stanford) | SOLR | Nein | Kein RAG, 3-5 GB, letztes Release 03/2025 |
+| [Teedy](https://github.com/sismics/docs) | Nein | Nein | Ja | Nein | Kein Tagging/RAG, letztes Release 2023 |
+| [PdfDing](https://codeberg.org/mrmn/PdfDing) | Nein | Nein | Nein | Nein | Nur PDFs |
+| [OCA/dms](https://github.com/OCA/dms) | Nein | Regex | Schwach | Nein | Braucht Odoo |
+| [CKAN](https://github.com/ckan/ckan) | Custom Ext. | Nein | Solr | Nein | Datenkatalog, kein DMS |
+| [RAG-Anything](https://github.com/HKUDS/RAG-Anything) | Nein | Nein | Indirekt | Ja | Framework ohne UI |
+
+Ausgeschieden: OpenKM verteilt die Community Edition ab 7.0 ohne Quellcode, Lodestone ist seit 2021 still.
 
 ## Lokale OCR-Tools — nicht nutzbar (Hardware)
 
-| Projekt | Stars | Warum nicht? |
-|---|---|---|
-| [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) | 70.4K | Braucht viel RAM/GPU |
-| [MinerU](https://github.com/opendatalab/MinerU) | 54.0K | 16-32 GB RAM |
-| [Docling](https://github.com/docling-project/docling) | 52.4K | 3-4 GB RAM Spitzen |
-| [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF) | 32.5K | Nur Preprocessing |
+| Projekt | Warum nicht? |
+|---|---|
+| [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) | Braucht viel RAM/GPU |
+| [MinerU](https://github.com/opendatalab/MinerU) | 16-32 GB RAM |
+| [Docling](https://github.com/docling-project/docling) | 3-4 GB RAM Spitzen |
+| [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF) | Nur Preprocessing |
 
-## Weitere (andere Kategorie)
+## Andere Kategorie
 
-| Projekt | Stars | Warum nicht? |
-|---|---|---|
-| [Seafile](https://github.com/haiwen/seafile) | 14.3K | File Sync, kein OCR/Tagging |
-| [Filestash](https://github.com/mickael-kerjean/filestash) | 13.5K | Universal File Platform, kein OCR |
-| [TagStudio](https://github.com/TagStudioDev/TagStudio) | 6.7K | Desktop-App, kein RAG/Web |
-| [ArchiveBox](https://github.com/ArchiveBox/ArchiveBox) | 26.8K | Web-Archivierung, kein Dok-DMS |
-
-## ERP/PIM/NoCode — alle verworfen
-
-| Tool | Typ | Warum nicht? |
-|---|---|---|
-| Odoo | ERP | Community kein DMS. Enterprise kostet. Kein RAG. |
-| ERPNext | ERP | 10 Container. Kein DMS-Modul. Kein RAG. |
-| NocoBase | No-Code | RAG ab $8.000. Kein OCR. |
-| Pimcore | PIM/DAM | POCL-Lizenz. 5+ Container. Overengineered. |
-| UnoPIM | PIM | Reines Produktdaten-Tool. |
+| Tool | Warum nicht? |
+|---|---|
+| Seafile, Filestash | File Sync bzw. File Platform, kein OCR/Tagging |
+| TagStudio | Desktop-App, kein RAG/Web |
+| ArchiveBox | Web-Archivierung, kein Dokumenten-DMS |
+| Odoo, ERPNext | ERP ohne DMS-Modul in der Community-Fassung, kein RAG |
+| NocoBase | RAG kostenpflichtig, kein OCR |
+| Pimcore, UnoPIM | Produktdaten, kein DMS |
