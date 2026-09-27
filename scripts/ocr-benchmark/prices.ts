@@ -11,7 +11,7 @@ import type { Price } from './summary.ts'
  * - Infomaniak AI Services: https://www.infomaniak.com/en/hosting/ai-services/prices, keine Grundgebühr
  * - kvant/Phoeniqs: https://documentation.kvant.cloud/maas/active-models/, Grundgebühr CHF 50 pro Monat (als
  *   Guthaben, verfällt am Monatsende)
- * Selbst betriebene Qwen3-VL 32B/8B: GPU-Stundenpreis statt Tokens, siehe AGENTS.md; hier ohne Preis.
+ * Selbst betriebene Qwen3-VL 32B/8B: GPU-Stundenpreis statt Tokens, hier ohne Preis.
  */
 const USD_CHF = 0.8194
 

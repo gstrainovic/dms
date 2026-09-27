@@ -18,7 +18,7 @@ pnpm test                   # Unit- und Integrationstests
 pnpm test:e2e               # Playwright
 ```
 
-Details zu Architektur, Pipeline und Befehlen stehen in [`CLAUDE.md`](./CLAUDE.md).
+Details zu Architektur, Pipeline und Befehlen stehen in [`AGENTS.md`](./AGENTS.md).
 
 ## 3. Regeln
 

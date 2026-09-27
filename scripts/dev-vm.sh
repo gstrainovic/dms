@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Dev-Supabase auf der Infomaniak-Instanz dms-dev bedienen (Entwickeln ohne Docker/Podman, siehe AGENTS.md).
+# Dev-Supabase auf der Infomaniak-Instanz dms-dev bedienen (Entwickeln ohne Docker/Podman, siehe Skill .claude/skills/dev-vm).
 # Alles im Repo spricht Supabase über 127.0.0.1:54321 an, ein SSH-Tunnel blendet die Instanz dort ein.
 set -euo pipefail
 

@@ -8,7 +8,7 @@ Dokumentenmanagement mit Texterkennung, automatischer Sortierung, intelligenter 
 - Suche nach Stichwörtern und nach Bedeutung
 - Chat mit Quellenangaben über alle Dokumente
 
-Architektur, Pipeline und Befehle sind in [`CLAUDE.md`](./CLAUDE.md) beschrieben, der Einstieg für Beitragende in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+Architektur, Pipeline und Befehle sind in [`AGENTS.md`](./AGENTS.md) beschrieben, der Einstieg für Beitragende in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Lizenz
 

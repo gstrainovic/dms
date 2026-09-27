@@ -56,7 +56,6 @@ Davon hängt Späteres ab.
 - [ ] Auffindbarkeit: `apps/dms/public/` mit `robots.txt` (KI-Crawler erlaubt), `sitemap.xml`, `llms.txt`, dazu JSON-LD in `index.html` (auto-service `d7cb755`)
 - [ ] Messung ohne Analytics-Dienst: Besucher aus dem Caddy-Log, Feld `source` an `documents` (Upload, Kamera, Drag & Drop, Mail) wie auto-service `e158cb5`
 - [ ] Hygiene-Tests gegen ungenutzte Abhängigkeiten und Komponenten (auto-service `cd55593`)
-- [ ] Doku: `AGENTS.md` als Hauptdatei, `CLAUDE.md` nur noch `@AGENTS.md` (auto-service `4d32220`); die Evaluationstabellen aus `CLAUDE.md` streichen oder archivieren; keine Testzahlen in der Doku («112 Tests» in `CLAUDE.md`), sie veralten mit jedem Test
 
 ## 4. Später, wenn ein Anlass kommt
 

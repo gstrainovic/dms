@@ -1,6 +1,6 @@
 # Evaluation bestehender Open-Source-Lösungen
 
-Geprüft gegen die fünf Pflicht-Anforderungen aus `CLAUDE.md`: Upload mit Archiv, Mistral OCR, Auto-Tagging,
+Geprüft gegen die fünf Pflicht-Anforderungen aus `AGENTS.md`: Upload mit Archiv, Mistral OCR, Auto-Tagging,
 Volltextsuche + Chat/RAG, **eine** Oberfläche. Zweimal geprüft: am 08.02.2026 vor dem Eigenbau und am 27.09.2026.
 
 ## Fazit
