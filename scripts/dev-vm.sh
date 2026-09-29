@@ -27,6 +27,19 @@ EOF
 
 remote() { ssh -o BatchMode=yes "$VM" "cd $REMOTE_DIR && $*"; }
 
+# dms-dev schaltet sich nach 2 h ohne SSH-Verbindung ab und wird danach zurückgestellt (tools/leerlauf-aus.sh);
+# vor jedem Befehl wecken, falls openstack und das Weckskript da sind
+wecken() {
+  local w="${DMS_WECKEN:-$HOME/projects/tools/dev-instanz-wecken.sh}"
+  if [[ -x "$w" ]] && command -v openstack >/dev/null; then
+    "$w" dms-dev
+  elif ! ssh -o BatchMode=yes -o ConnectTimeout=5 "$VM" true 2>/dev/null; then
+    echo "dms-dev antwortet nicht (schläft?): openstack --os-cloud PCP-CTPZLR8-dc3-a server unshelve dms-dev" >&2
+    exit 1
+  fi
+}
+[[ "${1:-}" =~ ^(tunnel|sync|reset|status|logs|restart|ssh)$ ]] && wecken
+
 tunnel_args=()
 for p in "${PORTS[@]}"; do tunnel_args+=(-L "$p:localhost:$p"); done
 

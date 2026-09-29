@@ -38,6 +38,7 @@ scripts/dev-vm.sh reset && pnpm exec playwright test     # E2E, reuseExistingSer
 `pnpm dev`, `pnpm test`, `pnpm test:e2e` starten Podman und sind nur für den Laptop.
 
 ## Kosten und Neuaufsetzen
-- Läuft sie, kostet sie rund 13 CHF im Monat mit IPv4. Länger nicht gebraucht: `openstack --os-cloud PCP-CTPZLR8-dc3-a server shelve dms-dev`, zurück mit `server unshelve`.
+- Läuft sie, kostet sie rund 13 CHF im Monat mit IPv4. Nach 2 h ohne SSH-Verbindung (Shell oder Tunnel) schaltet sie sich selbst ab (`~/projects/tools/leerlauf-aus.sh`, systemd-Timer), der Kostenwächter stellt sie beim nächsten Akquise-Lauf zurück (`shelve`); dann bleiben rund 3.50 CHF für IPv4 und Abbild.
+- `dev-vm.sh` weckt sie vor jedem Befehl über `~/projects/tools/dev-instanz-wecken.sh dms-dev` (braucht `openstack` und `~/.config/openstack/clouds.yaml`; aus dem Zurückgestellten einige Minuten). Ohne openstack-CLI (zweiter PC) meldet das Skript den Befehl zum Zurückholen.
 - Der Kostenwächter `~/.local/bin/wartungsheft-cost-watch` zählt alle Instanzen des Projekts, Limit 60 CHF.
 - Neu aufsetzen: cloud-init installiert Docker CE, Supabase CLI und klont das Repo nach `/opt/dms`; danach `.env` per scp nach `/opt/dms/.env` und `/opt/dms/supabase/functions/.env`, dann `supabase start` in `/opt/dms`.
