@@ -18,5 +18,8 @@ description: OCR-Vergleich Mistral OCR gegen Vision-Modelle Schweizer Anbieter (
 - Schweizer Dokumente: alle Modelle finden fast alle Felder, Mistral OCR hat die wenigsten Zeichenfehler.
 - Die unabhängige Rangliste ParseBench (GitHub `run-llama/ParseBench`, rund 2000 echte Geschäftsseiten) bestätigt das Bild: Mistral OCR 4 gesamt 60.7, Gemma 4 31B 62.4, MinerU 2.5 Pro (bei kvant) 72.8.
 
+## Abschluss
+Wenn alle Läufe drin sind (offene Punkte in `todo.md`), die Resultate in `scripts/ocr-benchmark/ocr-vergleich.md` festhalten: Methode, Testsatz, Tabellen je Seitengruppe, Kosten, Befunde, Grenzen, Empfehlung. Daraus entsteht ein Artikel für `~/projects/strainovic-it.ch` (Kategorie «KI»). Aus den echten Fotos nur Zahlen, keine Personendaten. Unterwegs korrigierte Methodenfehler (Denk-Tokens, Normalisierung) gehören als Lehre in den Text.
+
 ## Infomaniak AI Services
 Produkt 111648, Token `INFOMANIAK_AI_TOKEN` in `.env`, Scope `ai-tools`. Alle Sprachmodelle dort nehmen Bilder an, auch wenn die FAQ anderes sagt. Qwen3.5 und Kimi K2.6 brauchen abgeschaltetes Denken (`chat_template_kwargs`), sonst geht das ganze Antwortlimit ans Denken und der Text bleibt leer. Apertus erfindet Werte und taugt nicht für OCR.

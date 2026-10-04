@@ -2,6 +2,10 @@
 
 Upload (PNG/JPG/PDF) → OCR → Auto-Tagging und Felder → Volltext- und Hybrid-Suche → Chat/RAG über alle Dokumente, in einem Dashboard. Anlassbezogenes Wissen steht in `.claude/skills/`; der Vergleich mit bestehenden Lösungen in `docs/evaluation.md`.
 
+## Arbeitsweise
+- Claude erledigt alles, was am Rechner geht (Recherche, Adresslisten, Texte, Seiten, Mail-Entwürfe, Auswertung, Deploy, Doku). Keine Vorschläge, die Telefonate, Besuche oder Gespräche von Goran voraussetzen. Bei ihm bleiben nur die Freigabe eines vorbereiteten Mailversands, Ausweis und Zahlungsdaten bei Kontoeröffnungen und das Bestätigen von Käufen; diese Schritte als «einziger Klick von dir» kennzeichnen.
+- Wiederkehrende Prüfungen (Kostenwächter, Health-Checks) laufen als Abschnitt im täglichen Lauf aus `~/projects/find-jobs/AGENTS.md`, nie als systemd-Timer oder Cron auf dem Laptop; Skripte dürfen als Werkzeug existieren, aufgerufen werden sie vom Lauf.
+
 ## Stack und Architektur
 - pnpm-Monorepo: `apps/dms/` (Vue 3, PrimeVue 4, Pinia, Vue Router), `packages/shared/` (OCR-Pipeline, Retry, Image-Utils, Queries)
 - Supabase: PostgreSQL + pgvector + Storage, Edge Functions (Deno/TS) in `supabase/functions/`, Migrations in `supabase/migrations/`
