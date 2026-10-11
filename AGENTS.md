@@ -61,7 +61,7 @@ Lokal Fedora mit rootless Podman, Supabase-Container brauchen nach dem Start run
 Derselbe Proxy-Code wie auto-service, aber je App eine eigene Instanz, hier als Edge Function mit Supabase-Store und gepinntem Commit-Hash. Kein Monorepo mit auto-service (andere DB, Paketmanager, Deployments, Lizenzen). Hilfsfunktionen (`withRetry`, `hashImage` …) bleiben bewusst pro App, ein geteiltes Utils-Paket lohnt sich erst mit einem zweiten Modul in Proxy-Grösse. Update: Skill `ai-proxy-update`.
 
 ## Geschäftsmodell und Abo
-Open Source, verkauft wird das Hosting; Details im privaten Repo `~/projects/business` (`dms/geschaeftsmodell.md`). Plan-Katalog im Code (`supabase/functions/_shared/plans.ts`): Starter und Pro; Ziel sind die Jahresabos Privat und Betrieb nach 30 Tagen Testzeit (todo.md). Zahlung zuerst per QR-Rechnung für Schweizer Kunden; ob später Payrexx oder Stripe für Karten dazukommt, ist offen. Details: Skill `billing`.
+Open Source, verkauft wird das Hosting; Details im privaten Repo `~/projects/business` (`dms/geschaeftsmodell.md`). Plan-Katalog im Code (`supabase/functions/_shared/plans.ts`): Starter und Pro; Ziel sind die Jahresabos Privat und Betrieb nach 30 Tagen Testzeit (todo.md). Zahlung zuerst per QR-Rechnung für Schweizer Kunden; ob später Payrexx oder Stripe für Karten dazukommt, ist offen, Karte aber nur als einmalige Zahlung pro Jahr, nie als Abo mit automatischer Abbuchung (`../find-jobs/akquise/abo-regeln.md`). Details: Skill `billing`.
 
 ## Lizenz
 AGPL-3.0-only, Beiträge nur mit CLA (Skill `lizenz-cla`). Der Check-Name `cla` ist in der Branch Protection eingetragen, Job nicht umbenennen.
