@@ -16,7 +16,6 @@ Davon hängt Späteres ab.
   - Ergebnis und Entscheid mit Zahlen in `AGENTS.md` festhalten
   - Zum Schluss alle Resultate in `scripts/ocr-benchmark/ocr-vergleich.md` (Methode, Testsatz, Tabellen, Kosten, Befunde, Grenzen); Grundlage für einen Artikel auf strainovic-it.ch in einer neuen Kategorie «KI»
   - Gewinnt ein Schweizer Anbieter: Anbieter im ai-proxy umschaltbar machen (betrifft auch auto-service), Embeddings mit anderer Dimension als 1024 heissen Migration der pgvector-Spalte und Neuindexierung. Kandidat für Chat und Embeddings ist Infomaniak AI Services (Server laufen schon dort, AVV im Manager, keine Grundgebühr, OpenAI-kompatibel)
-- [ ] Dev ohne Podman (Windows): Dev-Instanz per SSH-Tunnel wie `wartungsheft-dev`, braucht die Ports 54321, 54322 und 54324; oder Supabase auf `wartungsheft-dev` mitlaufen lassen, falls der RAM reicht
 
 ## 2. Bis zum Go-live
 
